@@ -370,11 +370,25 @@
       document.getElementById('wdate').textContent = new Date(COUPLE.weddingDateISO).toLocaleDateString();
 
       try {
-        // encodeURI handles spaces in filenames for GitHub Pages
+        // encodeURI handles spaces and special chars; cache-bust ensures fresh fetch on Pages
         const url = encodeURI(CSV_LOCAL_PATH) + '?cb=' + Date.now();
         const res = await fetch(url);
-        if (!res.ok) throw new Error('CSV HTTP ' + res.status);
+        if (!res.ok) throw new Error('CSV HTTP ' + res.status + ' for ' + url);
         const text = await res.text();
+
+        // ---- Debug: verify header row matches exactly ----
+        const firstLine = (text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text).split(/
+?
+/)[0] || '';
+        const expected = EXPECTED_HEADERS.join(', ');
+        if (firstLine.trim() !== expected){
+          console.warn('[Header mismatch] Found:', firstLine, '
+Expected:', expected);
+          const el = document.getElementById('error');
+          el.style.display = 'block';
+          el.innerHTML = 'Header mismatch.<br/><strong>Found:</strong> <code>'+firstLine.replace(/</g,'&lt;')+'</code><br/><strong>Expected:</strong> <code>'+expected+'</code>';
+        }
+
         const days = parseCSV(text);
         if(!days.length){ throw new Error('No rows found after parsing the CSV.'); }
         render(days);
@@ -382,7 +396,7 @@
         console.error('CSV load failed:', e);
         const el = document.getElementById('error');
         el.style.display = 'block';
-        el.innerHTML = 'Could not load <code>'+CSV_LOCAL_PATH+'</code>.<br/>Ensure the file exists in the repo and the header row matches: <code>'+EXPECTED_HEADERS.join(', ')+'</code>.';
+        el.innerHTML = 'Could not load <code>'+CSV_LOCAL_PATH+'</code>.<br/>Open it directly in your browser to verify the path: <code>'+CSV_LOCAL_PATH+'</code>.';
         document.querySelector('section[aria-live]')?.setAttribute('aria-busy','false');
       }
     }
