@@ -10,42 +10,31 @@
 
   <!-- ========================= THEME / CSS ========================= -->
   <style>
-    /* ---- Theme Variables (white / purple / blue blend) ---- */
     :root {
-      --purple: #6F4CF6;    /* primary */
-      --blue:   #2A74FF;    /* secondary */
-      --bg:     #ffffff;    /* page background */
-      --text:   #0f172a;    /* slate-900 */
-      --muted:  #475569;    /* slate-600 */
-      --soft:        #F5F7FF;  /* neutral soft */
-      --soft-purple: #F2EEFF;  /* soft purple chip */
-      --soft-blue:   #ECF3FF;  /* soft blue chip */
-      --ring:        #e2e8f0;  /* borders */
+      --purple: #6F4CF6;
+      --blue:   #2A74FF;
+      --bg:     #ffffff;
+      --text:   #0f172a;
+      --muted:  #475569;
+      --soft:        #F5F7FF;
+      --soft-purple: #F2EEFF;
+      --soft-blue:   #ECF3FF;
+      --ring:        #e2e8f0;
     }
-
-    /* ---- Base Styles ---- */
     * { box-sizing: border-box; }
     body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; background: var(--bg); color: var(--text); }
     .container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
-
-    /* ---- Banner/Header ---- */
     .banner { background: linear-gradient(90deg, var(--purple), var(--blue)); color: #fff; }
     .banner .inner { padding: 28px 24px; }
     h1 { margin: 0; font-size: clamp(22px, 3.6vw, 28px); font-weight: 700; }
     .sub { opacity: .9; margin-top: 6px; font-size: 14px; }
     .pill { display:inline-flex; align-items:center; gap:8px; background: rgba(255,255,255,.15); padding: 6px 10px; border-radius: 999px; font-size: 13px; margin-top: 12px; }
-
-    /* ---- Frame + Tabs ---- */
     .frame { margin-top: -20px; background: #fff; border-radius: 16px; border: 1px solid var(--ring); box-shadow: 0 1px 2px rgba(0,0,0,.04); padding: 10px; }
     .tabs { display:flex; flex-wrap: wrap; gap: 8px; }
     .tab { border: none; background: transparent; color: rgba(15,23,42,.9); padding: 8px 12px; border-radius: 999px; font-size: 14px; cursor: pointer; }
     .tab[aria-pressed="true"] { background: #fff; color: #0f172a; border: 1px solid var(--ring); }
-
-    /* ---- Section Headings ---- */
     h2 { font-size: 20px; margin: 18px 0 8px; }
     .muted { color: var(--muted); font-size: 14px; }
-
-    /* ---- Cards Layout ---- */
     .grid { display: grid; gap: 12px; margin: 18px 0 64px; }
     .card { background: #fff; border: 1px solid var(--ring); border-radius: 16px; padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
     .row { display:flex; align-items:flex-start; gap: 12px; }
@@ -56,24 +45,17 @@
     .badge.tour { background: var(--soft-blue); }
     .badge.free { background: var(--soft); }
     .badge.wedding { background: var(--soft-purple); }
-
-    /* ---- Buttons ---- */
     .btns { display:flex; flex-wrap:wrap; gap:8px; margin-top: 10px; }
     .btn { display:inline-flex; align-items:center; gap:8px; font-size: 14px; padding:8px 12px; border-radius: 12px; border:none; cursor:pointer; text-decoration:none; }
     .btn.map { background: var(--soft-blue); color:#0f172a; }
     .btn.google { background: var(--soft-purple); color:#0f172a; }
     .btn.ics { background: var(--soft); color:#0f172a; }
-
-    /* ---- Footer ---- */
     footer { text-align:center; color:#64748b; font-size:12px; padding: 0 0 40px; }
     @media (max-width: 520px){ .time{min-width: 100px;} }
-
-    /* ---- Lightweight skeleton for error banners ---- */
-    .error { background:#fff1f2; color:#9f1239; border:1px solid #fecdd3; padding:12px 14px; border-radius:12px; }
+    .error { background:#fff1f2; color:#9f1239; border:1px solid #fecdd3; padding:12px 14px; border-radius:12px; margin-top:16px; }
   </style>
 </head>
 <body>
-  <!-- ========================= HEADER ========================= -->
   <header class="banner">
     <div class="container inner">
       <h1>Sean & Maya's Wedding Week</h1>
@@ -81,15 +63,10 @@
       <div class="pill" id="countdown">Loading…</div>
     </div>
   </header>
-
-  <!-- ========================= MAIN CONTENT ========================= -->
   <main class="container">
-    <!-- ===== Day Tabs Section ===== -->
     <section class="frame" aria-label="Day tabs">
       <nav class="tabs" id="tabs"></nav>
     </section>
-
-    <!-- ===== Activities Section ===== -->
     <section aria-live="polite" aria-busy="true">
       <h2 id="dayTitle"></h2>
       <div class="muted">Tap a button to open maps or save to your calendar.</div>
@@ -97,34 +74,18 @@
       <div id="error" class="error" style="display:none"></div>
     </section>
   </main>
-
-  <!-- ========================= FOOTER ========================= -->
   <footer>
     Built with 💜 for Sean & Maya. Updates sync from a CSV stored in this repository.
   </footer>
-
-  <!-- ========================= JAVASCRIPT ========================= -->
   <script>
-    /* ---------------------------------------------------------------
-     * CONFIGURATION
-     * Couple info & LOCAL CSV filename (stored in this repo)
-     * ------------------------------------------------------------- */
     const COUPLE = { first: 'Sean', second: 'Maya', weddingDateISO: '2025-08-31' };
-    // Use your exact filename (spaces allowed). If you move it, update the path.
     const CSV_LOCAL_PATH = 'wedding_week_itinerary.csv';
-
-    // Expected header names (must match the CSV header row exactly)
     const EXPECTED_HEADERS = [
       'Day','Date','Start Time','End Time','Activity Name','Description','Location','Map Link','Category','Image URL'
     ];
 
-    /* ---------------------------------------------------------------
-     * UTILITIES
-     * Formatting, countdown, calendar helpers
-     * ------------------------------------------------------------- */
     function fmtDate(iso){ try { return new Date(iso).toLocaleDateString(); } catch { return iso; } }
     function daysUntil(dateISO){ const today = new Date(); const target = new Date(dateISO + 'T00:00:00'); return Math.ceil((target - today)/(1000*60*60*24)); }
-
     function isoToGcal(iso){ return new Date(iso).toISOString().replace(/[-:]/g,'').split('.')[0]+'Z'; }
     function googleCal({title, details, location, startISO, endISO}){
       const p = new URLSearchParams({ action:'TEMPLATE', text:title, details:details||'', location:location||'',
@@ -142,21 +103,15 @@
       return new Blob([body],{type:'text/calendar;charset=utf-8'});
     }
 
-    /* ---------------------------------------------------------------
-     * CSV PARSING (LOCAL)
-     * Robust quote-aware CSV parser → rows → normalized days
-     * ------------------------------------------------------------- */
     function parseCSV(text){
-      // Strip UTF-8 BOM if present
       if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
       const lines = text.split(/\r?\n/);
-      // Remove trailing empty lines
       while(lines.length && !lines[lines.length-1].trim()) lines.pop();
       if (!lines.length) return [];
 
       const headerCells = splitCSVLine(lines[0]).map(h => h.trim());
       const headerSet = new Set(headerCells);
-      // Basic sanity check: ensure we have at least "Day" and "Date"
+
       if (!headerSet.has('Day') || !headerSet.has('Date')) {
         console.warn('Header row missing expected fields. Found:', headerCells);
       }
@@ -169,7 +124,6 @@
       return normalizeRows(rows);
     }
 
-    // Split a CSV line respecting quotes and escaped quotes
     function splitCSVLine(line){
       const out = []; let cur = ''; let q=false;
       for(let i=0;i<line.length;i++){
@@ -183,10 +137,6 @@
       return out;
     }
 
-    /* ---------------------------------------------------------------
-     * NORMALIZATION / MAPPING
-     * Group by day, coerce times, sort days and items
-     * ------------------------------------------------------------- */
     function normalizeRows(rows){
       const grouped = {};
       for(const r of rows){
@@ -237,17 +187,11 @@
       return '🗓️';
     }
 
-    /* ---------------------------------------------------------------
-     * RENDERING
-     * Build tabs UI, day header, and activity cards
-     * ------------------------------------------------------------- */
     function render(days){
-      // Header: wedding date + countdown
       document.getElementById('wdate').textContent = fmtDate(COUPLE.weddingDateISO);
       const dleft = daysUntil(COUPLE.weddingDateISO);
       document.getElementById('countdown').textContent = dleft>0 ? `${dleft} day${dleft===1?'':'s'} to go!` : (dleft===0?"It's today!":"Happily ever after 💜");
 
-      // Tabs: one button per day
       const tabs = document.getElementById('tabs');
       const cards = document.getElementById('cards');
       const dayTitle = document.getElementById('dayTitle');
@@ -263,7 +207,6 @@
         tabs.appendChild(b);
       });
 
-      // Switch currently selected day and render its cards
       function selectDay(i){
         const d = days[i];
         Array.from(tabs.children).forEach((el, idx)=> el.setAttribute('aria-pressed', idx===i?'true':'false'));
@@ -279,48 +222,45 @@
         d.items.forEach(item => cards.appendChild(activityCard(item, d.date)));
       }
 
-      // Default to first day
-      selectDay(0);
+      if (days.length === 0) {
+        dayTitle.textContent = "";
+        cards.innerHTML = '';
+        const empty = document.createElement('div');
+        empty.className = 'card';
+        empty.textContent = 'No itinerary data found. Please check CSV.';
+        cards.appendChild(empty);
+      } else {
+        selectDay(0);
+      }
       document.querySelector('section[aria-live]')?.setAttribute('aria-busy','false');
     }
 
     function activityCard(item, dateISO){
-      // Build one event card (time/title/buttons/image)
       const card = document.createElement('div');
       card.className = 'card';
-
       const row = document.createElement('div');
       row.className = 'row';
-
       const time = document.createElement('div');
       time.className = 'time';
       const range = item.endTime && item.endTime !== item.startTime ? `${item.startTime} – ${item.endTime}` : (item.startTime || '');
       time.textContent = range;
-
       const body = document.createElement('div');
       body.style.flex = '1';
-
       const head = document.createElement('div');
       head.style.display = 'flex'; head.style.alignItems = 'center'; head.style.justifyContent = 'space-between'; head.style.gap = '8px';
-
       const title = document.createElement('div');
       title.className = 'title';
       title.textContent = item.title || '';
-
       const badge = document.createElement('span');
       badge.className = badgeClass(item.category);
       badge.innerHTML = `<span>${icon(item.category)}</span><span>${item.category||''}</span>`;
-
       head.appendChild(title); head.appendChild(badge);
-
       const desc = document.createElement('div');
       desc.className = 'muted';
       desc.style.marginTop = '4px';
       desc.textContent = item.description || '';
-
       const btns = document.createElement('div');
       btns.className = 'btns';
-
       if(item.location){
         const a = document.createElement('a');
         a.className = 'btn map'; a.target = '_blank'; a.rel = 'noreferrer';
@@ -328,30 +268,24 @@
         a.textContent = '📍 Map';
         btns.appendChild(a);
       }
-
       const startISO = `${dateISO}T${(item.startTime||'09:00').padStart(5,'0')}:00`;
       const endISO = item.endTime ? `${dateISO}T${item.endTime.padStart(5,'0')}:00` : ( ()=>{ const d=new Date(startISO); d.setHours(d.getHours()+1); return d.toISOString().slice(0,19); } )();
-
       const g = document.createElement('a');
       g.className = 'btn google'; g.target = '_blank'; g.rel = 'noreferrer';
       g.href = googleCal({ title: item.title, details: item.description, location: item.location, startISO, endISO });
       g.textContent = '📆 Add to Google';
       btns.appendChild(g);
-
       const ics = document.createElement('button');
       ics.className = 'btn ics'; ics.type = 'button'; ics.textContent = '⬇️ Download .ics';
       ics.addEventListener('click', ()=>{
         const blob = icsFile({ title: item.title, details: item.description, location: item.location, startISO, endISO });
-        const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download = (item.title||'event').replace(/\s+/g,'_')+'.ics'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+        const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download = (item.title||'event').replace(/\s+/g,'_')+'.ics'; document.body.appendChild(a); a.click(); setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},200);
       });
       btns.appendChild(ics);
-
       body.appendChild(head);
       if(item.description) body.appendChild(desc);
       body.appendChild(btns);
-
       row.appendChild(time); row.appendChild(body); card.appendChild(row);
-
       if(item.imageUrl){
         const img = document.createElement('img');
         img.src = item.imageUrl; img.alt = item.title||''; img.style.marginTop = '10px'; img.style.width='100%'; img.style.borderRadius='12px';
@@ -361,36 +295,32 @@
       return card;
     }
 
-    /* ---------------------------------------------------------------
-     * APP BOOTSTRAP (LOCAL CSV)
-     * Fetch local CSV from repo, parse, and render the UI
-     * ------------------------------------------------------------- */
     async function load(){
-      // Set wedding date in header
       document.getElementById('wdate').textContent = new Date(COUPLE.weddingDateISO).toLocaleDateString();
-
       try {
-        // encodeURI handles spaces and special chars; cache-bust ensures fresh fetch on Pages
         const url = encodeURI(CSV_LOCAL_PATH) + '?cb=' + Date.now();
         const res = await fetch(url);
         if (!res.ok) throw new Error('CSV HTTP ' + res.status + ' for ' + url);
         const text = await res.text();
 
-        // ---- Debug: verify header row matches exactly ----
-        const firstLine = (text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text).split(/
-?
-/)[0] || '';
-        const expected = EXPECTED_HEADERS.join(', ');
-        if (firstLine.trim() !== expected){
-          console.warn('[Header mismatch] Found:', firstLine, '
-Expected:', expected);
+        // --- More robust header check ---
+        const firstLine = (text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text).split(/\r?\n/)[0] || '';
+        const headerCells = splitCSVLine(firstLine).map(h => h.trim());
+        const missing = EXPECTED_HEADERS.filter(h => !headerCells.includes(h));
+        if (missing.length) {
           const el = document.getElementById('error');
           el.style.display = 'block';
-          el.innerHTML = 'Header mismatch.<br/><strong>Found:</strong> <code>'+firstLine.replace(/</g,'&lt;')+'</code><br/><strong>Expected:</strong> <code>'+expected+'</code>';
+          el.innerHTML = 'Header mismatch.<br/><strong>Missing fields:</strong> <code>'+missing.join(', ')+'</code><br/><strong>Found:</strong> <code>'+headerCells.join(', ')+'</code>';
+          document.querySelector('section[aria-live]')?.setAttribute('aria-busy','false');
         }
 
         const days = parseCSV(text);
-        if(!days.length){ throw new Error('No rows found after parsing the CSV.'); }
+        if(!days.length){
+          const el = document.getElementById('error');
+          el.style.display = 'block';
+          el.innerHTML = 'No rows found after parsing the CSV.<br/>Check for blank lines or formatting issues.';
+          document.querySelector('section[aria-live]')?.setAttribute('aria-busy','false');
+        }
         render(days);
       } catch (e) {
         console.error('CSV load failed:', e);
@@ -400,8 +330,6 @@ Expected:', expected);
         document.querySelector('section[aria-live]')?.setAttribute('aria-busy','false');
       }
     }
-
-    // Kick things off
     load();
   </script>
 </body>
