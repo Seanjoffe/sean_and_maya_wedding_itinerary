@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <!-- ===================== HEAD / META ===================== -->
-  <!-- Basic metadata and global styles for the single‑file site -->
+  <!-- Basic metadata and global styles for the single-file site -->
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Sean & Maya — Wedding Week Itinerary</title>
@@ -373,32 +373,74 @@
     /* -------------------------------------------------------
      * APP BOOTSTRAP
      * Fetch data from Sheets, parse, and render the UI
+     * Tries CSV first; if blocked by CORS, falls back to GViz JSON.
      * ----------------------------------------------------- */
     async function load(){
       // Set wedding date in header
       document.getElementById('wdate').textContent = new Date(COUPLE.weddingDateISO).toLocaleDateString();
 
+      // 1) Try CSV (fastest). If it fails, try GViz fallback.
       try {
-        // Fetch CSV (add cache-buster to avoid stale content)
-        const res = await fetch(CSV_URL + (CSV_URL.includes('output=csv') ? ('&cb='+Date.now()) : ''));
-        const text = await res.text();
+        const days = await loadViaCSV(CSV_URL);
+        render(days);
+        return;
+      } catch (e) {
+        console.warn('CSV fetch failed, attempting GViz fallback…', e);
+      }
 
-        // Decide parser based on content-type or CSV signature
-        let days;
-        if ((res.headers.get('content-type')||'').includes('text/csv') || text.includes(','+EXPECTED_HEADERS[EXPECTED_HEADERS.length-1])) {
-          days = parseCSV(text);
-        } else {
-          days = parseHTMLTable(text); // fallback for pubhtml links
-        }
-
-        // Render full UI
+      try {
+        const days = await loadViaGViz(CSV_URL);
         render(days);
       } catch (e) {
-        console.error(e);
+        console.error('GViz fallback failed:', e);
         const cards = document.getElementById('cards');
-        cards.innerHTML = '<div class="card">Could not load the sheet. Make sure it\'s published to the web (CSV or HTML).</div>';
+        cards.innerHTML = '<div class="card">Could not load the sheet. Make sure it\'s published to the web and public. If this persists, use the tab-specific CSV (with <code>gid=...&single=true&output=csv</code>) or upload a CSV to this repo.</div>';
         document.querySelector('section[aria-live]')?.setAttribute('aria-busy','false');
       }
+    }
+
+    // ---- CSV loader (may be blocked by CORS depending on Google headers) ----
+    async function loadViaCSV(url){
+      const res = await fetch(url + (url.includes('output=csv') ? ('&cb='+Date.now()) : ''));
+      if (!res.ok) throw new Error('CSV HTTP '+res.status);
+      const text = await res.text();
+      if (!text.includes(',') || text.split(/\r?\n/).length < 2) throw new Error('CSV content not detected');
+      return parseCSV(text);
+    }
+
+    // ---- GViz fallback (script injection bypasses CORS) ----
+    function gvizUrlFromPub(url){
+      // Use gid if present; otherwise default to first sheet (gid=0)
+      const gidMatch = url.match(/gid=(\d+)/);
+      const gid = gidMatch ? gidMatch[1] : '0';
+      const base = url.replace(/\/pub.*$/, '');
+      return base + '/gviz/tq?tqx=out:json&headers=1&gid=' + gid;
+    }
+
+    function loadViaGViz(publishUrl){
+      return new Promise((resolve, reject) => {
+        const url = gvizUrlFromPub(publishUrl) + '&cb=' + Date.now();
+        // GViz returns JS that calls google.visualization.Query.setResponse(payload)
+        const prev = window.google?.visualization?.Query?.setResponse;
+        window.google = window.google || {}; window.google.visualization = window.google.visualization || {}; window.google.visualization.Query = window.google.visualization.Query || {};
+        window.google.visualization.Query.setResponse = function(payload){
+          try {
+            const table = payload.table;
+            if(!table) throw new Error('No table in GViz payload');
+            const headers = table.cols.map(c=>c.label || c.id);
+            const rows = table.rows.map(r => Object.fromEntries(headers.map((h,i)=>[h, (r.c[i] && (r.c[i].v ?? r.c[i].f)) || ''])));
+            resolve(normalizeRows(rows));
+          } catch (err) {
+            reject(err);
+          } finally {
+            if(prev) window.google.visualization.Query.setResponse = prev;
+          }
+        };
+        const script = document.createElement('script');
+        script.src = url;
+        script.onerror = () => { if(prev) window.google.visualization.Query.setResponse = prev; reject(new Error('GViz script load error')); };
+        document.head.appendChild(script);
+      });
     }
 
     // Kick things off
