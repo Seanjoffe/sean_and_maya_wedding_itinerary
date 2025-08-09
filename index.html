@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sean & Maya — Wedding Week Itinerary</title>
+  <meta name="description" content="Wedding week itinerary for Sean & Maya — mobile‑friendly, pulls live data from Google Sheets." />
+  <style>
+    :root {
+      --purple: #6F4CF6;
+      --blue: #2A74FF;
+      --bg: #ffffff;
+      --text: #0f172a; /* slate-900 */
+      --muted: #475569; /* slate-600 */
+      --soft: #F5F7FF;
+      --soft-purple: #F2EEFF;
+      --soft-blue: #ECF3FF;
+      --ring: #e2e8f0; /* slate-200 */
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; background: var(--bg); color: var(--text); }
+    .container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+    .banner { background: linear-gradient(90deg, var(--purple), var(--blue)); color: #fff; }
+    .banner .inner { padding: 28px 24px; }
+    h1 { margin: 0; font-size: clamp(22px, 3.6vw, 28px); font-weight: 700; }
+    .sub { opacity: .9; margin-top: 6px; font-size: 14px; }
+    .pill { display:inline-flex; align-items:center; gap:8px; background: rgba(255,255,255,.15); padding: 6px 10px; border-radius: 999px; font-size: 13px; margin-top: 12px; }
+    .frame { margin-top: -20px; background: #fff; border-radius: 16px; border: 1px solid var(--ring); box-shadow: 0 1px 2px rgba(0,0,0,.04); padding: 10px; }
+    .tabs { display:flex; flex-wrap: wrap; gap: 8px; }
+    .tab { border: none; background: transparent; color: rgba(15,23,42,.9); padding: 8px 12px; border-radius: 999px; font-size: 14px; cursor: pointer; }
+    .tab[aria-pressed="true"] { background: #fff; color: #0f172a; border: 1px solid var(--ring); }
+    h2 { font-size: 20px; margin: 18px 0 8px; }
+    .muted { color: var(--muted); font-size: 14px; }
+    .grid { display: grid; gap: 12px; margin: 18px 0 64px; }
+    .card { background: #fff; border: 1px solid var(--ring); border-radius: 16px; padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+    .row { display:flex; align-items:flex-start; gap: 12px; }
+    .time { min-width: 120px; display:flex; align-items:center; gap:8px; color:#334155; }
+    .title { font-weight: 600; }
+    .badge { display:inline-flex; align-items:center; gap:6px; font-size:12px; padding:6px 10px; border-radius:999px; }
+    .badge.meal { background:#F6F1FF; }
+    .badge.tour { background: var(--soft-blue); }
+    .badge.free { background: var(--soft); }
+    .badge.wedding { background: var(--soft-purple); }
+    .btns { display:flex; flex-wrap:wrap; gap:8px; margin-top: 10px; }
+    .btn { display:inline-flex; align-items:center; gap:8px; font-size: 14px; padding:8px 12px; border-radius: 12px; border:none; cursor:pointer; text-decoration:none; }
+    .btn.map { background: var(--soft-blue); color:#0f172a; }
+    .btn.google { background: var(--soft-purple); color:#0f172a; }
+    .btn.ics { background: var(--soft); color:#0f172a; }
+    footer { text-align:center; color:#64748b; font-size:12px; padding: 0 0 40px; }
+    @media (max-width: 520px){ .time{min-width: 100px;} }
+  </style>
+</head>
+<body>
+  <header class="banner">
+    <div class="container inner">
+      <h1>Sean & Maya's Wedding Week</h1>
+      <div class="sub">Villa Nona, Caesarea · <span id="wdate"></span></div>
+      <div class="pill" id="countdown">Loading…</div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="frame" aria-label="Day tabs">
+      <nav class="tabs" id="tabs"></nav>
+    </section>
+
+    <section aria-live="polite" aria-busy="true">
+      <h2 id="dayTitle"></h2>
+      <div class="muted">Tap a button to open maps or save to your calendar.</div>
+      <div class="grid" id="cards"></div>
+    </section>
+  </main>
+
+  <footer>
+    Built with 💜 for Sean & Maya. Updates sync from Google Sheets.
+  </footer>
+
+  <script>
+    // ================= CONFIG =================
+    const COUPLE = { first: 'Sean', second: 'Maya', weddingDateISO: '2025-08-31' };
+    // NOTE: The link you shared is an HTML publish link. For best results, publish the tab as CSV.
+    // If you later publish as CSV, paste that link here (it usually ends with output=csv):
+    // const CSV_URL = 'https://docs.google.com/spreadsheets/d/…/pub?gid=0&single=true&output=csv';
+    // Using your current link for now; the code will fall back to parsing the HTML table if needed.
+    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQP1zzuMVl7dj_bugHRNZiEAv6OXCHTOJ966aJFaykOadmWpkf8VEN8NcRAkDfbXsfTdRk3hiNpmyJ4/pub?output=csv';
+
+    const EXPECTED_HEADERS = [
+      'Day','Date','Start Time','End Time','Activity Name','Description','Location','Map Link','Category','Image URL'
+    ];
+
+    // ================ UTILITIES =================
+    function fmtDate(iso){ try { return new Date(iso).toLocaleDateString(); } catch { return iso; } }
+    function daysUntil(dateISO){ const today = new Date(); const target = new Date(dateISO + 'T00:00:00'); return Math.ceil((target - today)/(1000*60*60*24)); }
+    function googleCal({title, details, location, startISO, endISO}){
+      const p = new URLSearchParams({ action:'TEMPLATE', text:title, details:details||'', location:location||'',
+        dates: isoToGcal(startISO) + '/' + isoToGcal(endISO)
+      });
+      return 'https://www.google.com/calendar/render?' + p.toString();
+    }
+    function isoToGcal(iso){ return new Date(iso).toISOString().replace(/[-:]/g,'').split('.')[0]+'Z'; }
+    function icsFile({title, details, location, startISO, endISO}){
+      const esc = s => (s||'').replace(/[\n,]/g,' ');
+      const dt = s => isoToGcal(s);
+      const body = [
+        'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Wedding Week//Sean and Maya//EN','BEGIN:VEVENT',
+        'DTSTART:'+dt(startISO),'DTEND:'+dt(endISO),'SUMMARY:'+esc(title),'DESCRIPTION:'+esc(details),'LOCATION:'+esc(location),
+        'END:VEVENT','END:VCALENDAR' ].join('\n');
+      return new Blob([body],{type:'text/calendar;charset=utf-8'});
+    }
+
+    function parseCSV(text){
+      const lines = text.split(/\r?\n/).filter(Boolean);
+      const head = splitCSVLine(lines[0]);
+      const idx = Object.fromEntries(head.map((h,i)=>[h.trim(), i]));
+      const rows = lines.slice(1).map(line=>{
+        const cells = splitCSVLine(line).map(s=>s.replace(/^"|"$/g,'').trim());
+        const obj = {}; head.forEach((h,i)=> obj[h.trim()] = cells[i]||'');
+        return obj;
+      });
+      return normalizeRows(rows);
+    }
+    function splitCSVLine(line){
+      const out = []; let cur = ''; let q=false;
+      for(let i=0;i<line.length;i++){
+        const c=line[i];
+        if(c==='"') { if(q && line[i+1]==='"'){ cur+='"'; i++; } else { q=!q; } }
+        else if(c===',' && !q){ out.push(cur); cur=''; }
+        else { cur+=c; }
+      }
+      out.push(cur); return out;
+    }
+
+    function parseHTMLTable(html){
+      const doc = new DOMParser().parseFromString(html,'text/html');
+      const table = doc.querySelector('table');
+      if(!table) throw new Error('No table found in published HTML');
+      const rows = Array.from(table.querySelectorAll('tr'))
+        .map(tr => Array.from(tr.children).map(td => td.textContent.trim()));
+      const head = rows.shift();
+      const data = rows.map(r => Object.fromEntries(head.map((h,i)=>[h.trim(), r[i]||''])));
+      return normalizeRows(data);
+    }
+
+    function normalizeRows(rows){
+      // Map acceptable header variants to our expected keys
+      const keyMap = {
+        'Day':'Day','Date':'Date','Start Time':'Start Time','End Time':'End Time',
+        'Activity Name':'Activity Name','Description':'Description','Location':'Location',
+        'Map Link':'Map Link','Category':'Category','Image URL':'Image URL'
+      };
+      const grouped = {};
+      for(const r of rows){
+        const obj = {};
+        for(const k in keyMap){ obj[k] = r[k] || ''; }
+        // Build day key
+        const key = `${obj['Day']}__${obj['Date']}`;
+        if(!grouped[key]) grouped[key] = { day: obj['Day']||'', date: obj['Date']||'', items: [] };
+        grouped[key].items.push({
+          startTime: (obj['Start Time']||'').padStart(5,'0'),
+          endTime: (obj['End Time']||''),
+          title: obj['Activity Name']||'',
+          description: obj['Description']||'',
+          location: obj['Location']||'',
+          map: obj['Map Link']||'',
+          category: obj['Category']||'',
+          imageUrl: obj['Image URL']||''
+        });
+      }
+      const days = Object.values(grouped).sort((a,b)=> new Date(a.date) - new Date(b.date));
+      for(const d of days){ d.items.sort((a,b)=> (a.startTime||'').localeCompare(b.startTime||'')); }
+      return days;
+    }
+
+    function badgeClass(cat){
+      const c = (cat||'').toLowerCase();
+      if(c.includes('wedding')) return 'badge wedding';
+      if(c.includes('meal')||c.includes('dinner')||c.includes('lunch')||c.includes('breakfast')) return 'badge meal';
+      if(c.includes('tour')||c.includes('activity')) return 'badge tour';
+      if(c.includes('free')) return 'badge free';
+      return 'badge free';
+    }
+
+    function icon(cat){
+      const c = (cat||'').toLowerCase();
+      if(c.includes('wedding')) return '💍';
+      if(c.includes('meal')||c.includes('dinner')||c.includes('lunch')||c.includes('breakfast')) return '🍽️';
+      if(c.includes('tour')||c.includes('activity')) return '🏛️';
+      if(c.includes('free')) return '🏖️';
+      return '🗓️';
+    }
+
+    function render(days){
+      document.getElementById('wdate').textContent = fmtDate(COUPLE.weddingDateISO);
+      const dleft = daysUntil(COUPLE.weddingDateISO);
+      document.getElementById('countdown').textContent = dleft>0 ? `${dleft} day${dleft===1?'':'s'} to go!` : (dleft===0?"It's today!":"Happily ever after 💜");
+
+      const tabs = document.getElementById('tabs');
+      const cards = document.getElementById('cards');
+      const dayTitle = document.getElementById('dayTitle');
+
+      tabs.innerHTML = '';
+      days.forEach((d, i) => {
+        const b = document.createElement('button');
+        b.className = 'tab';
+        b.type = 'button';
+        b.setAttribute('aria-pressed', i===0 ? 'true' : 'false');
+        b.textContent = d.day || new Date(d.date).toLocaleDateString(undefined,{ weekday:'long' });
+        b.addEventListener('click', () => selectDay(i));
+        tabs.appendChild(b);
+      });
+
+      function selectDay(i){
+        const d = days[i];
+        Array.from(tabs.children).forEach((el, idx)=> el.setAttribute('aria-pressed', idx===i?'true':'false'));
+        dayTitle.textContent = `${d.day || new Date(d.date).toLocaleDateString(undefined,{weekday:'long'})} · ${fmtDate(d.date)}`;
+        cards.innerHTML = '';
+        if(!d.items.length){
+          const empty = document.createElement('div');
+          empty.className = 'card';
+          empty.textContent = 'No activities yet for this day.';
+          cards.appendChild(empty);
+          return;
+        }
+        d.items.forEach(item => cards.appendChild(activityCard(item, d.date)));
+      }
+
+      selectDay(0);
+      document.querySelector('section[aria-live]')?.setAttribute('aria-busy','false');
+    }
+
+    function activityCard(item, dateISO){
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      const row = document.createElement('div');
+      row.className = 'row';
+
+      const time = document.createElement('div');
+      time.className = 'time';
+      const range = item.endTime && item.endTime !== item.startTime ? `${item.startTime} – ${item.endTime}` : (item.startTime || '');
+      time.textContent = range;
+
+      const body = document.createElement('div');
+      body.style.flex = '1';
+
+      const head = document.createElement('div');
+      head.style.display = 'flex'; head.style.alignItems = 'center'; head.style.justifyContent = 'space-between'; head.style.gap = '8px';
+
+      const title = document.createElement('div');
+      title.className = 'title';
+      title.textContent = item.title || '';
+
+      const badge = document.createElement('span');
+      badge.className = badgeClass(item.category);
+      badge.innerHTML = `<span>${icon(item.category)}</span><span>${item.category||''}</span>`;
+
+      head.appendChild(title); head.appendChild(badge);
+
+      const desc = document.createElement('div');
+      desc.className = 'muted';
+      desc.style.marginTop = '4px';
+      desc.textContent = item.description || '';
+
+      const btns = document.createElement('div');
+      btns.className = 'btns';
+
+      if(item.location){
+        const a = document.createElement('a');
+        a.className = 'btn map'; a.target = '_blank'; a.rel = 'noreferrer';
+        a.href = item.map || ('https://maps.google.com/?q=' + encodeURIComponent(item.location));
+        a.textContent = '📍 Map';
+        btns.appendChild(a);
+      }
+
+      const startISO = `${dateISO}T${(item.startTime||'09:00').padStart(5,'0')}:00`;
+      const endISO = item.endTime ? `${dateISO}T${item.endTime.padStart(5,'0')}:00` : ( ()=>{ const d=new Date(startISO); d.setHours(d.getHours()+1); return d.toISOString().slice(0,19); } )();
+
+      const g = document.createElement('a');
+      g.className = 'btn google'; g.target = '_blank'; g.rel = 'noreferrer';
+      g.href = googleCal({ title: item.title, details: item.description, location: item.location, startISO, endISO });
+      g.textContent = '📆 Add to Google';
+      btns.appendChild(g);
+
+      const ics = document.createElement('button');
+      ics.className = 'btn ics'; ics.type = 'button'; ics.textContent = '⬇️ Download .ics';
+      ics.addEventListener('click', ()=>{
+        const blob = icsFile({ title: item.title, details: item.description, location: item.location, startISO, endISO });
+        const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download = (item.title||'event').replace(/\s+/g,'_')+'.ics'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+      });
+      btns.appendChild(ics);
+
+      body.appendChild(head);
+      if(item.description) body.appendChild(desc);
+      body.appendChild(btns);
+
+      row.appendChild(time); row.appendChild(body); card.appendChild(row);
+
+      if(item.imageUrl){
+        const img = document.createElement('img');
+        img.src = item.imageUrl; img.alt = item.title||''; img.style.marginTop = '10px'; img.style.width='100%'; img.style.borderRadius='12px';
+        img.loading = 'lazy';
+        card.appendChild(img);
+      }
+      return card;
+    }
+
+    async function load(){
+      document.getElementById('wdate').textContent = new Date(COUPLE.weddingDateISO).toLocaleDateString();
+      try {
+        const res = await fetch(CSV_URL + (CSV_URL.includes('output=csv') ? ('&cb='+Date.now()) : ''));
+        const text = await res.text();
+        let days;
+        if((res.headers.get('content-type')||'').includes('text/csv') || text.includes(','+EXPECTED_HEADERS[EXPECTED_HEADERS.length-1])){
+          days = parseCSV(text);
+        } else {
+          // fallback: parse the published HTML table
+          days = parseHTMLTable(text);
+        }
+        render(days);
+      } catch (e) {
+        console.error(e);
+        const cards = document.getElementById('cards');
+        cards.innerHTML = '<div class="card">Could not load the sheet. Make sure it\'s published to the web (CSV or HTML).</div>';
+        document.querySelector('section[aria-live]')?.setAttribute('aria-busy','false');
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>
