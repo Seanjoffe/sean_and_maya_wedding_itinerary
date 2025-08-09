@@ -1,27 +1,26 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <!-- ===================== HEAD / META ===================== -->
-  <!-- Basic metadata and global styles for the single-file site -->
+  <!-- ========================= HEAD / META ========================= -->
+  <!-- Full, feature-rich single-file site. Reads a LOCAL CSV from the repo. -->
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Sean & Maya — Wedding Week Itinerary</title>
-  <meta name="description" content="Wedding week itinerary for Sean & Maya — mobile-friendly, pulls live data from Google Sheets." />
+  <meta name="description" content="Wedding week itinerary — mobile friendly, loads from a local CSV in this repo." />
 
-  <!-- ===================== THEME / CSS ===================== -->
-  <!-- Colors, layout primitives, and component styles -->
+  <!-- ========================= THEME / CSS ========================= -->
   <style>
-    /* ---- Theme Variables ---- */
+    /* ---- Theme Variables (white / purple / blue blend) ---- */
     :root {
-      --purple: #6F4CF6;    /* primary accent */
-      --blue:   #2A74FF;    /* secondary accent */
+      --purple: #6F4CF6;    /* primary */
+      --blue:   #2A74FF;    /* secondary */
       --bg:     #ffffff;    /* page background */
-      --text:   #0f172a;    /* main text (slate-900) */
-      --muted:  #475569;    /* secondary text (slate-600) */
+      --text:   #0f172a;    /* slate-900 */
+      --muted:  #475569;    /* slate-600 */
       --soft:        #F5F7FF;  /* neutral soft */
       --soft-purple: #F2EEFF;  /* soft purple chip */
       --soft-blue:   #ECF3FF;  /* soft blue chip */
-      --ring:        #e2e8f0;  /* subtle borders (slate-200) */
+      --ring:        #e2e8f0;  /* borders */
     }
 
     /* ---- Base Styles ---- */
@@ -68,11 +67,13 @@
     /* ---- Footer ---- */
     footer { text-align:center; color:#64748b; font-size:12px; padding: 0 0 40px; }
     @media (max-width: 520px){ .time{min-width: 100px;} }
+
+    /* ---- Lightweight skeleton for error banners ---- */
+    .error { background:#fff1f2; color:#9f1239; border:1px solid #fecdd3; padding:12px 14px; border-radius:12px; }
   </style>
 </head>
 <body>
-  <!-- ===================== HEADER ===================== -->
-  <!-- Hero banner with names, venue/date, and live countdown -->
+  <!-- ========================= HEADER ========================= -->
   <header class="banner">
     <div class="container inner">
       <h1>Sean & Maya's Wedding Week</h1>
@@ -81,121 +82,112 @@
     </div>
   </header>
 
-  <!-- ===================== MAIN CONTENT ===================== -->
+  <!-- ========================= MAIN CONTENT ========================= -->
   <main class="container">
     <!-- ===== Day Tabs Section ===== -->
-    <!-- A pill-style tab list to switch between itinerary days -->
     <section class="frame" aria-label="Day tabs">
       <nav class="tabs" id="tabs"></nav>
     </section>
 
     <!-- ===== Activities Section ===== -->
-    <!-- Cards for the currently selected day (time, title, map, calendar) -->
     <section aria-live="polite" aria-busy="true">
       <h2 id="dayTitle"></h2>
       <div class="muted">Tap a button to open maps or save to your calendar.</div>
       <div class="grid" id="cards"></div>
+      <div id="error" class="error" style="display:none"></div>
     </section>
   </main>
 
-  <!-- ===================== FOOTER ===================== -->
-  <!-- Attribution and note about live updates from Sheets -->
+  <!-- ========================= FOOTER ========================= -->
   <footer>
-    Built with 💜 for Sean & Maya. Updates sync from Google Sheets.
+    Built with 💜 for Sean & Maya. Updates sync from a CSV stored in this repository.
   </footer>
 
-  <!-- ===================== JAVASCRIPT ===================== -->
+  <!-- ========================= JAVASCRIPT ========================= -->
   <script>
-    /* -------------------------------------------------------
+    /* ---------------------------------------------------------------
      * CONFIGURATION
-     * Basic constants: couple info and Google Sheets CSV URL
-     * ----------------------------------------------------- */
+     * Couple info & LOCAL CSV filename (stored in this repo)
+     * ------------------------------------------------------------- */
     const COUPLE = { first: 'Sean', second: 'Maya', weddingDateISO: '2025-08-31' };
-    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQP1zzuMVl7dj_bugHRNZiEAv6OXCHTOJ966aJFaykOadmWpkf8VEN8NcRAkDfbXsfTdRk3hiNpmyJ4/pub?output=csv';
-    const EXPECTED_HEADERS = ['Day','Date','Start Time','End Time','Activity Name','Description','Location','Map Link','Category','Image URL'];
+    // Use your exact filename (spaces allowed). If you move it, update the path.
+    const CSV_LOCAL_PATH = 'wedding_week_itinerary - wedding_itinerary_clean.csv';
 
-    /* -------------------------------------------------------
+    // Expected header names (must match the CSV header row exactly)
+    const EXPECTED_HEADERS = [
+      'Day','Date','Start Time','End Time','Activity Name','Description','Location','Map Link','Category','Image URL'
+    ];
+
+    /* ---------------------------------------------------------------
      * UTILITIES
-     * Small helpers: formatting, countdown, calendar links
-     * ----------------------------------------------------- */
-    function fmtDate(iso){
-      // Safe date -> nice local string
-      try { return new Date(iso).toLocaleDateString(); } catch { return iso; }
-    }
-    function daysUntil(dateISO){
-      // Days from today to target (ceil)
-      const today = new Date();
-      const target = new Date(dateISO + 'T00:00:00');
-      return Math.ceil((target - today)/(1000*60*60*24));
-    }
-    function isoToGcal(iso){
-      // Format ISO for Google Calendar URLs
-      return new Date(iso).toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
-    }
+     * Formatting, countdown, calendar helpers
+     * ------------------------------------------------------------- */
+    function fmtDate(iso){ try { return new Date(iso).toLocaleDateString(); } catch { return iso; } }
+    function daysUntil(dateISO){ const today = new Date(); const target = new Date(dateISO + 'T00:00:00'); return Math.ceil((target - today)/(1000*60*60*24)); }
+
+    function isoToGcal(iso){ return new Date(iso).toISOString().replace(/[-:]/g,'').split('.')[0]+'Z'; }
     function googleCal({title, details, location, startISO, endISO}){
-      // Build a Google Calendar add-event URL
-      const p = new URLSearchParams({
-        action:'TEMPLATE', text:title, details:details||'', location:location||'',
+      const p = new URLSearchParams({ action:'TEMPLATE', text:title, details:details||'', location:location||'',
         dates: isoToGcal(startISO) + '/' + isoToGcal(endISO)
       });
       return 'https://www.google.com/calendar/render?' + p.toString();
     }
     function icsFile({title, details, location, startISO, endISO}){
-      // Generate a downloadable .ics file (Apple/Outlook)
       const esc = s => (s||'').replace(/[\n,]/g,' ');
       const dt = s => isoToGcal(s);
       const body = [
         'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Wedding Week//Sean and Maya//EN','BEGIN:VEVENT',
         'DTSTART:'+dt(startISO),'DTEND:'+dt(endISO),'SUMMARY:'+esc(title),'DESCRIPTION:'+esc(details),'LOCATION:'+esc(location),
-        'END:VEVENT','END:VCALENDAR'
-      ].join('\n');
+        'END:VEVENT','END:VCALENDAR' ].join('\n');
       return new Blob([body],{type:'text/calendar;charset=utf-8'});
     }
 
-    /* -------------------------------------------------------
-     * CSV / HTML PARSING
-     * Convert Sheet output (CSV or published HTML) to JS objects
-     * ----------------------------------------------------- */
+    /* ---------------------------------------------------------------
+     * CSV PARSING (LOCAL)
+     * Robust quote-aware CSV parser → rows → normalized days
+     * ------------------------------------------------------------- */
     function parseCSV(text){
-      // Robust CSV -> array of row objects using header row
-      const lines = text.split(/\r?\n/).filter(Boolean);
-      const head = splitCSVLine(lines[0]);
-      const rows = lines.slice(1).map(line=>{
-        const cells = splitCSVLine(line).map(s=>s.replace(/^"|"$/g,'').trim());
-        const obj = {}; head.forEach((h,i)=> obj[h.trim()] = cells[i]||'');
+      // Strip UTF-8 BOM if present
+      if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+      const lines = text.split(/\r?\n/);
+      // Remove trailing empty lines
+      while(lines.length && !lines[lines.length-1].trim()) lines.pop();
+      if (!lines.length) return [];
+
+      const headerCells = splitCSVLine(lines[0]).map(h => h.trim());
+      const headerSet = new Set(headerCells);
+      // Basic sanity check: ensure we have at least "Day" and "Date"
+      if (!headerSet.has('Day') || !headerSet.has('Date')) {
+        console.warn('Header row missing expected fields. Found:', headerCells);
+      }
+
+      const rows = lines.slice(1).map(line => {
+        const cells = splitCSVLine(line).map(s => s.replace(/^"|"$/g,'').trim());
+        const obj = {}; headerCells.forEach((h,i)=> obj[h] = (cells[i] ?? ''));
         return obj;
       });
       return normalizeRows(rows);
     }
+
+    // Split a CSV line respecting quotes and escaped quotes
     function splitCSVLine(line){
-      // Split a CSV line respecting quoted commas
       const out = []; let cur = ''; let q=false;
       for(let i=0;i<line.length;i++){
-        const c=line[i];
-        if(c==='"') { if(q && line[i+1]==='"'){ cur+='"'; i++; } else { q=!q; } }
-        else if(c===',' && !q){ out.push(cur); cur=''; }
+        const c = line[i];
+        if(c==='"'){
+          if(q && line[i+1]==='"'){ cur+='"'; i++; } else { q = !q; }
+        } else if(c===',' && !q){ out.push(cur); cur=''; }
         else { cur+=c; }
       }
-      out.push(cur); return out;
-    }
-    function parseHTMLTable(html){
-      // Fallback: parse published HTML table (if CSV not used)
-      const doc = new DOMParser().parseFromString(html,'text/html');
-      const table = doc.querySelector('table');
-      if(!table) throw new Error('No table found in published HTML');
-      const rows = Array.from(table.querySelectorAll('tr'))
-        .map(tr => Array.from(tr.children).map(td => td.textContent.trim()));
-      const head = rows.shift();
-      const data = rows.map(r => Object.fromEntries(head.map((h,i)=>[h.trim(), r[i]||''])));
-      return normalizeRows(data);
+      out.push(cur);
+      return out;
     }
 
-    /* -------------------------------------------------------
+    /* ---------------------------------------------------------------
      * NORMALIZATION / MAPPING
      * Group by day, coerce times, sort days and items
-     * ----------------------------------------------------- */
+     * ------------------------------------------------------------- */
     function normalizeRows(rows){
-      // Keep only expected keys; group rows by Day/Date
       const grouped = {};
       for(const r of rows){
         const obj = {
@@ -227,29 +219,28 @@
       for(const d of days){ d.items.sort((a,b)=> (a.startTime||'').localeCompare(b.startTime||'')); }
       return days;
     }
+
     function badgeClass(cat){
-      // Map category text to a visual badge class
       const c = (cat||'').toLowerCase();
       if(c.includes('wedding')) return 'badge wedding';
       if(c.includes('meal')||c.includes('dinner')||c.includes('lunch')||c.includes('breakfast')) return 'badge meal';
-      if(c.includes('tour')||c.includes('activity')) return 'badge tour';
+      if(c.includes('tour')||c.includes('activity')||c.includes('sight')) return 'badge tour';
       if(c.includes('free')) return 'badge free';
       return 'badge free';
     }
     function icon(cat){
-      // Emoji icon per category (fallback to calendar)
       const c = (cat||'').toLowerCase();
       if(c.includes('wedding')) return '💍';
       if(c.includes('meal')||c.includes('dinner')||c.includes('lunch')||c.includes('breakfast')) return '🍽️';
-      if(c.includes('tour')||c.includes('activity')) return '🏛️';
+      if(c.includes('tour')||c.includes('activity')||c.includes('sight')) return '🏛️';
       if(c.includes('free')) return '🏖️';
       return '🗓️';
     }
 
-    /* -------------------------------------------------------
+    /* ---------------------------------------------------------------
      * RENDERING
      * Build tabs UI, day header, and activity cards
-     * ----------------------------------------------------- */
+     * ------------------------------------------------------------- */
     function render(days){
       // Header: wedding date + countdown
       document.getElementById('wdate').textContent = fmtDate(COUPLE.weddingDateISO);
@@ -370,77 +361,30 @@
       return card;
     }
 
-    /* -------------------------------------------------------
-     * APP BOOTSTRAP
-     * Fetch data from Sheets, parse, and render the UI
-     * Tries CSV first; if blocked by CORS, falls back to GViz JSON.
-     * ----------------------------------------------------- */
+    /* ---------------------------------------------------------------
+     * APP BOOTSTRAP (LOCAL CSV)
+     * Fetch local CSV from repo, parse, and render the UI
+     * ------------------------------------------------------------- */
     async function load(){
       // Set wedding date in header
       document.getElementById('wdate').textContent = new Date(COUPLE.weddingDateISO).toLocaleDateString();
 
-      // 1) Try CSV (fastest). If it fails, try GViz fallback.
       try {
-        const days = await loadViaCSV(CSV_URL);
-        render(days);
-        return;
-      } catch (e) {
-        console.warn('CSV fetch failed, attempting GViz fallback…', e);
-      }
-
-      try {
-        const days = await loadViaGViz(CSV_URL);
+        // encodeURI handles spaces in filenames for GitHub Pages
+        const url = encodeURI(CSV_LOCAL_PATH) + '?cb=' + Date.now();
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('CSV HTTP ' + res.status);
+        const text = await res.text();
+        const days = parseCSV(text);
+        if(!days.length){ throw new Error('No rows found after parsing the CSV.'); }
         render(days);
       } catch (e) {
-        console.error('GViz fallback failed:', e);
-        const cards = document.getElementById('cards');
-        cards.innerHTML = '<div class="card">Could not load the sheet. Make sure it\'s published to the web and public. If this persists, use the tab-specific CSV (with <code>gid=...&single=true&output=csv</code>) or upload a CSV to this repo.</div>';
+        console.error('CSV load failed:', e);
+        const el = document.getElementById('error');
+        el.style.display = 'block';
+        el.innerHTML = 'Could not load <code>'+CSV_LOCAL_PATH+'</code>.<br/>Ensure the file exists in the repo and the header row matches: <code>'+EXPECTED_HEADERS.join(', ')+'</code>.';
         document.querySelector('section[aria-live]')?.setAttribute('aria-busy','false');
       }
-    }
-
-    // ---- CSV loader (may be blocked by CORS depending on Google headers) ----
-    async function loadViaCSV(url){
-      const res = await fetch(url + (url.includes('output=csv') ? ('&cb='+Date.now()) : ''));
-      if (!res.ok) throw new Error('CSV HTTP '+res.status);
-      const text = await res.text();
-      if (!text.includes(',') || text.split(/\r?\n/).length < 2) throw new Error('CSV content not detected');
-      return parseCSV(text);
-    }
-
-    // ---- GViz fallback (script injection bypasses CORS) ----
-    function gvizUrlFromPub(url){
-      // Use gid if present; otherwise default to first sheet (gid=0)
-      const gidMatch = url.match(/gid=(\d+)/);
-      const gid = gidMatch ? gidMatch[1] : '0';
-      const base = url.replace(/\/pub.*$/, '');
-      return base + '/gviz/tq?tqx=out:json&headers=1&gid=' + gid;
-    }
-
-    function loadViaGViz(publishUrl){
-      return new Promise((resolve, reject) => {
-        const url = gvizUrlFromPub(publishUrl) + '&cb=' + Date.now();
-        // GViz returns JS that calls google.visualization.Query.setResponse(payload)
-        const prev = window.google?.visualization?.Query?.setResponse;
-        window.google = window.google || {}; window.google.visualization = window.google.visualization || {}; window.google.visualization.Query = window.google.visualization.Query || {};
-        window.google.visualization.Query.setResponse = function(payload){
-          try {
-            const table = payload.table;
-            if(!table) throw new Error('No table in GViz payload');
-            const headers = table.cols.map(c=>c.label || c.id);
-            const rows = table.rows.map(r => Object.fromEntries(headers.map((h,i)=>[h, (r.c[i] && (r.c[i].v ?? r.c[i].f)) || ''])));
-            resolve(normalizeRows(rows));
-          } catch (err) {
-            reject(err);
-          } finally {
-            if(prev) window.google.visualization.Query.setResponse = prev;
-          }
-        };
-        const script = document.createElement('script');
-        script.src = url;
-        script.onerror = () => { if(prev) window.google.visualization.Query.setResponse = prev; reject(new Error('GViz script load error')); };
-        document.head.appendChild(script);
-      });
     }
 
     // Kick things off
