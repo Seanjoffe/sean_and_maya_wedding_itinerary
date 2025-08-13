@@ -218,7 +218,7 @@ img, picture, video, canvas { display:block; max-width:100%; }
   /* Home hero */
   .hero { margin: 28px auto 10px; }
   .hero-title { font-size: clamp(32px, 4.5vw, 44px); }
-  .hero-sub { color: var(--muted); }
+  .hero-sub { color: var(--muted); }         /* base desktop; overridden for light mode below */
   .venue-link { color: inherit; }
 
   /* Photo to normal width with gentle radius */
@@ -264,6 +264,12 @@ img, picture, video, canvas { display:block; max-width:100%; }
   .badge.meal    { background: rgba(242,233,255, .65); }
   .badge.free    { background: rgba(226,232,240, .60); }
   .badge.wedding { background: rgba(240,227,255, .65); }
+}
+
+/* Keep Home subline/link dark on desktop in light mode (overrides desktop rule above) */
+@media (prefers-color-scheme: light) and (min-width: 768px) {
+  .hero-sub { color: var(--text); }
+  .venue-link { color: var(--text); text-decoration-color: currentColor; }
 }
 
 /* ===================================================================
