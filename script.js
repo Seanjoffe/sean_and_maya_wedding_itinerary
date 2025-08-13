@@ -80,7 +80,7 @@ function normalizeRows(rows){
     if(!grouped[key]) grouped[key] = { day: obj['Day'], date: obj['Date'], items: [] };
     grouped[key].items.push({
       startTime: (obj['Start Time']||'').padStart(5,'0'),
-      endTime:   obj['End Time']||'',
+      endTime:   (obj['End Time']||'').trim(),
       title:     obj['Activity Name']||'',
       description: obj['Description']||'',
       location:  obj['Location']||'',
@@ -109,18 +109,33 @@ function icon(cat){
   if(c.includes('free')) return '🏖️';
   return '🗓️';
 }
+function categoryVariant(cat){
+  const c = (cat||'').toLowerCase();
+  if(c.includes('wedding')) return 'wedding';
+  if(c.includes('meal')||c.includes('dinner')||c.includes('lunch')||c.includes('breakfast')) return 'meal';
+  if(c.includes('tour')||c.includes('activity')||c.includes('sight')) return 'tour';
+  if(c.includes('free')) return 'free';
+  return 'other';
+}
 
 // ================= RENDER: one activity card =================
 function activityCard(item, dateISO){
   const card = document.createElement('div');
   card.className = 'card';
 
+  // Add a category class so CSS can theme per type (works in addition to :has())
+  const variant = categoryVariant(item.category);
+  card.classList.add('card--' + variant);
+  card.dataset.category = variant;
+
   const row = document.createElement('div');
   row.className = 'row';
 
   const time = document.createElement('div');
   time.className = 'time';
-  const range = item.endTime && item.endTime !== item.startTime ? `${item.startTime} – ${item.endTime}` : (item.startTime || '');
+  const start = (item.startTime||'').padStart(5,'0');
+  const end = (item.endTime||'').padStart(5,'0');
+  const range = end && end !== start ? `${start} – ${end}` : (start || '');
   time.textContent = range;
 
   const body = document.createElement('div');
@@ -152,22 +167,27 @@ function activityCard(item, dateISO){
     const a = document.createElement('a');
     a.className = 'btn map'; a.target = '_blank'; a.rel = 'noreferrer';
     a.href = item.map || ('https://maps.google.com/?q=' + encodeURIComponent(item.location));
-    a.textContent = '📍 Map';
+    a.textContent = '📍 Open Map';
+    a.setAttribute('aria-label', `Open map for ${item.title || 'event'} at ${item.location}`);
+    a.title = item.location;
     btns.appendChild(a);
   }
 
-  const startISO = `${dateISO}T${(item.startTime||'09:00').padStart(5,'0')}:00`;
-  const endISO = item.endTime ? `${dateISO}T${item.endTime.padStart(5,'0')}:00`
+  const startISO = `${dateISO}T${(start || '09:00')}:00`;
+  const endISO = end
+    ? `${dateISO}T${end}:00`
     : (()=>{ const d=new Date(startISO); d.setHours(d.getHours()+1); return d.toISOString().slice(0,19); })();
 
   const g = document.createElement('a');
   g.className = 'btn google'; g.target = '_blank'; g.rel = 'noreferrer';
   g.href = googleCal({ title: item.title, details: item.description, location: item.location, startISO, endISO });
-  g.textContent = '📆 Add to Google';
+  g.textContent = '🗓️ Add to Google';
+  g.setAttribute('aria-label', `Add ${item.title || 'event'} to Google Calendar`);
   btns.appendChild(g);
 
   const ics = document.createElement('button');
   ics.className = 'btn ics'; ics.type = 'button'; ics.textContent = '⬇️ Download .ics';
+  ics.setAttribute('aria-label', `Download calendar file for ${item.title || 'event'}`);
   ics.addEventListener('click', ()=>{
     const blob = icsFile({ title: item.title, details: item.description, location: item.location, startISO, endISO });
     const url = URL.createObjectURL(blob);
