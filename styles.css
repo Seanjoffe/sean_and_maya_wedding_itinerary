@@ -30,7 +30,7 @@
 
   /* itinerary pastels (light cards) */
   --pastel-lilac: #f2e7ff; /* wedding */
-  --pastel-sky:   #e8f0ff; /* tour */
+  --pastel-sky:   #e8f0ff; /* tour  (Tel Aviv tour) */
   --pastel-peach: #ffe9d6; /* meal */
   --pastel-stone: #f3f4f6; /* free/other */
 
@@ -148,10 +148,10 @@ img, picture, video, canvas { display:block; max-width:100%; }
    ------------------------- */
 .grid { display: grid; gap: 10px; margin: 12px 0 0; }
 
-/* Light, readable cards by default */
+/* All event cards use the Tel Aviv tour pastel sky color */
 .card {
-  background: var(--pastel-stone);
-  border: 1px solid var(--card-line);
+  background: var(--pastel-sky);     /* Tel Aviv tour color */
+  border: 1px solid #cfe0ff;         /* matching border */
   border-radius: var(--radius);
   padding: 14px;
   box-shadow: var(--shadow-sm);
@@ -159,27 +159,21 @@ img, picture, video, canvas { display:block; max-width:100%; }
 
 /* Darker, visible text inside cards */
 .row { display:flex; flex-direction: column; align-items:flex-start; gap: 8px; }
-.time { min-width: 0; display:flex; align-items:center; gap:8px; color: var(--card-muted); font-weight: 600; }
+.time { min-width: 0; display:flex; align-items:center; gap:8px; color: #334155; font-weight: 600; }
 .title { font-weight: 700; color: var(--card-text); }
 .muted { color: var(--card-muted); font-size: 14px; }
 
-/* Category-specific pastel fills (no JS needed, uses :has() on the card) */
-.card:has(.badge.wedding) { background: var(--pastel-lilac); border-color: #e9d5ff; }
-.card:has(.badge.tour)    { background: var(--pastel-sky);   border-color: #cfe0ff; }
-.card:has(.badge.meal)    { background: var(--pastel-peach); border-color: #ffd9b5; }
-/* free/other use stone (default) */
-
-/* Buttons: pastel with dark text for contrast */
+/* Buttons: Calendar matches Map (both use sky pastel) */
 .btns { display:flex; flex-wrap:wrap; gap:10px; margin-top: 10px; }
 .btn  { width: 100%; justify-content: center; padding: 10px 14px; border-radius: 12px; border: 1px solid transparent; cursor:pointer; text-decoration:none; color: #0f172a; }
-.btn.map    { background: #dbeafe; border-color: #bfdbfe; } /* sky */
-.btn.google { background: #e9d5ff; border-color: #d8b4fe; } /* lilac */
-.btn.ics    { background: #bae6fd; border-color: #7dd3fc; } /* cyan-ish */
+.btn.map,
+.btn.google { background: #dbeafe; border-color: #bfdbfe; } /* same color for both */
+.btn.ics    { background: #bae6fd; border-color: #7dd3fc; } /* keep cyan-ish for ICS */
 .btn:hover  { filter: brightness(0.99); }
 .btn:active { transform: translateY(0.5px); }
 :where(.btn, .site-tab):focus-visible { outline: 2px solid #93c5fd; outline-offset: 2px; }
 
-/* Badges: subtle but readable on light cards */
+/* Badges (kept subtle) */
 .badge { display:inline-flex; align-items:center; gap:6px; font-size:12px; padding:6px 10px; border-radius:999px; color:#0f172a; background:#e2e8f0; }
 .badge.meal    { background:#f5e9ff; }
 .badge.tour    { background:#dbeafe; }
@@ -232,11 +226,26 @@ img, picture, video, canvas { display:block; max-width:100%; }
   .day-heading { font-size: 18px; }
   .day-sub { font-size: 15px; }
 
-  /* Cards/buttons in desktop layout (keep pastel theme) */
+  /* Desktop layout keeps the same card/button colors */
   .grid { gap: 12px; }
   .row { flex-direction: row; gap: 12px; }
-  .time { min-width: 120px; color: var(--card-muted); }
-  .btn { width: auto; justify-content: center; padding: 8px 12px; } /* pastel colors stay */
+  .time { min-width: 120px; color: #334155; }
+  .btn { width: auto; justify-content: center; padding: 8px 12px; }
+}
+
+/* ===================================================================
+   DARK MODE tuning for cards/buttons
+   =================================================================== */
+@media (prefers-color-scheme: dark) {
+  /* Deepen the tour pastel for dark surfaces */
+  .card { background: #1f2c48; border-color: #334155; }
+  .title { color: #f1f5f9; }
+  .muted, .time { color: #cbd5e1; }
+
+  /* Map + Calendar share same stronger blue in dark mode */
+  .btn.map,
+  .btn.google { background: #3b82f6; border-color: #2563eb; color: #fff; }
+  .btn.ics    { background: #22c3ee; border-color: #06b6d4; color: #0b1220; }
 }
 
 /* ===================================================================
