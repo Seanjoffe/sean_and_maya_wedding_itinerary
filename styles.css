@@ -149,55 +149,94 @@ body {
 
 
 /* =========================
-   MOBILE OPTIMIZATIONS
+   MOBILE POLISH (<=520px)
    ========================= */
 
-/* Base type scale & readable line-height */
-body { line-height: 1.5; }
-
-/* Tighten headings a bit on small screens */
-@media (max-width: 480px) {
-  .hero-title { font-size: clamp(24px, 7vw, 32px); }
-  .section-title { font-size: 18px; }
-  .day-heading { font-size: 17px; }
-  .day-sub { font-size: 15px; }
-  .hero-photo { margin: 16px auto 28px; }
+/* Thinner banner + bigger countdown pill */
+@media (max-width: 520px) {
+  .banner .inner { padding: 36px 16px; }     /* thinner */
+  .pill { font-size: 16px; padding: 10px 16px; border-radius: 999px; }
 }
 
-/* Make site tabs more touchable but compact */
-.site-tabs { padding: 8px 12px; gap: 6px; }
-.site-tab { padding: 8px 12px; }
-
-/* Card layout: stack time above content on narrow screens */
+/* Tabs: darker text + nicer pastel bar */
 @media (max-width: 520px) {
+  .site-tabs {
+    background:
+      linear-gradient(90deg, #ffe5c7, #f6d0f0 55%, #d7e9ff);
+    border-bottom: 1px solid rgba(15,23,42,.08);
+    gap: 6px; padding: 8px 12px;
+  }
+  .site-tab {
+    color: #111 !important;                 /* black text for visibility */
+    background: rgba(255,255,255,.9);
+    border: 1px solid rgba(15,23,42,.15);
+    font-weight: 700;
+    padding: 8px 12px;
+  }
+  .site-tab[aria-selected="true"] {
+    background: #fff;
+    border-color: rgba(15,23,42,.25);
+  }
+}
+
+/* HOME: cursive title, clearer subtext, bigger photo without distortion */
+@media (max-width: 520px) {
+  .hero-title {
+    font-family: "Dancing Script", cursive; /* falls back to device cursive if font not loaded */
+    font-size: clamp(28px, 9vw, 42px);
+    line-height: 1.1;
+  }
+  .hero-sub {
+    color: #e2e8f0;                         /* lighter for contrast on dark surface */
+    font-weight: 500;
+    margin-top: 10px;
+  }
+  .venue-link {
+    color: #f8fafc;                         /* high-contrast link */
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+  }
+  /* make photo feel bigger on phone */
+  .hero-photo { margin: 16px -16px 32px; }  /* gentle full-bleed look */
+  .hero-photo img { width: 100%; height: auto; border-radius: 22px; }
+}
+
+/* ITINERARY: lighter cards + high-contrast buttons & text */
+@media (max-width: 520px) {
+  /* Stack time above content for space */
   .row { flex-direction: column; gap: 8px; }
-  .time { min-width: 0; font-weight: 600; color: var(--muted); }
-  .card { padding: 14px; border-radius: 14px; }
-  .grid { gap: 10px; }
-}
+  .time { min-width: 0; font-weight: 600; color: #334155; }
 
-/* Buttons: full-width, centered, clear hierarchy on mobile */
-@media (max-width: 520px) {
+  /* Lighter surfaces for readability */
+  .card { background: #f5f7ff; border-color: #dbeafe; }
+  .muted { color: #475569; }
+  .title { color: #0f172a; }
+
+  /* Badges with clearer tints */
+  .badge.tour    { background: #dbeafe; }
+  .badge.meal    { background: #ede9fe; }
+  .badge.free    { background: #e2e8f0; }
+  .badge.wedding { background: #e9d5ff; }
+
+  /* Buttons: strong contrast, full width for easy tapping */
   .btns { gap: 10px; }
-  .btn { width: 100%; justify-content: center; padding: 10px 14px; }
+  .btn  { width: 100%; justify-content: center; padding: 10px 14px; color: #fff; }
+  .btn.map    { background: #2563eb; }   /* blue */
+  .btn.google { background: #7c3aed; }   /* purple */
+  .btn.ics    { background: #0ea5e9; }   /* cyan */
 }
 
-/* Improve button contrast in DARK MODE */
-@media (prefers-color-scheme: dark) {
-  .btn { color: #fff; border: 1px solid rgba(255,255,255,.08); }
-  .btn.map    { background: #1e2a46; }   /* navy-ish */
-  .btn.google { background: #2a204a; }   /* purple-ish */
-  .btn.ics    { background: #24303e; }   /* slate-ish */
-  .time { color: #cbd5e1; }               /* slightly brighter time text */
+/* DARK MODE mobile: keep it readable, but still lighter than the page */
+@media (prefers-color-scheme: dark) and (max-width: 520px) {
+  .card { background: #1f2a37; border-color: #334155; }
+  .title, .muted, .time { color: #e5e7eb; }
+  .badge.tour    { background: #243b5a; }
+  .badge.meal    { background: #2c234a; }
+  .badge.free    { background: #2b3441; }
+  .badge.wedding { background: #3a2a5d; }
+  .btn.map    { background: #3b82f6; }
+  .btn.google { background: #8b5cf6; }
+  .btn.ics    { background: #22c3ee; }
 }
 
-/* Countdown pill: slightly larger tap target on mobile */
-@media (max-width: 480px) {
-  .pill { font-size: 14px; padding: 8px 14px; }
-}
-
-/* Extra breathing room at the bottom on mobile (avoid nav overlaps) */
-@media (max-width: 520px) {
-  .site-footer { padding-bottom: 56px; }
-}
 
