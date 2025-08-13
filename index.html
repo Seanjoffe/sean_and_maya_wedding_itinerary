@@ -4,8 +4,13 @@
   <!-- Structure-only HTML. Styles & JS are external. -->
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
   <title>Sean & Maya — Wedding Week Itinerary</title>
   <meta name="description" content="Wedding week itinerary — mobile-friendly, loads from a local CSV in this repo." />
+
+  <!-- Theme color for mobile address bar -->
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#bfe0ff" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)"  content="#0b1220" />
 
   <!-- Font perf: preconnect + cursive heading font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,7 +18,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
 
   <!-- Cache-busted stylesheet to beat mobile caching -->
-  <link rel="stylesheet" href="styles.css?v=5" />
+  <link rel="stylesheet" href="styles.css?v=6" />
 
   <script src="script.js" defer></script>
 </head>
@@ -48,7 +53,13 @@
 
       <!-- Couple photo (replace src with your uploaded image path, e.g. assets/sean-maya.jpg) -->
       <figure class="hero-photo">
-        <img src="assets/landing_page_staring_at_each_other.jpeg" alt="Sean and Maya" />
+        <img
+          src="assets/landing_page_staring_at_each_other.jpeg"
+          alt="Sean and Maya"
+          width="1600" height="1067"
+          fetchpriority="high"
+          decoding="async"
+        />
       </figure>
     </div>
   </section>
