@@ -1,55 +1,68 @@
 # 💜 Sean & Maya’s Wedding Week Itinerary
 
-Welcome, friends and family! 🎉  
-This is your **official, always-up-to-date guide** to the week leading up to our wedding in beautiful Israel.
+Welcome, friends and family! 🎉 See the live site here: **[https://seanjoffe.github.io/sean\_and\_maya\_wedding\_itinerary/](https://seanjoffe.github.io/sean_and_maya_wedding_itinerary/)**
 
 ---
 
-## 📅 What is This?
-A **fun little web app** that pulls our itinerary straight from a live Google Sheet.  
-That means whenever we make changes (time, place, add more hummus stops), the site updates instantly — no reloading from our side needed. 🙌
+## What is this?
+
+A tiny, mobile-friendly web app that shows the wedding-week schedule. It reads events from a CSV in this repo and turns them into day tabs and activity cards with maps, calendar adds, and downloadable `.ics` files—no backend, no build tools.
 
 ---
 
-## 🌈 Features
-- **Blend Theme** — white, purple, and blue… because we’re classy like that.  
-- **Day Tabs** — pick a day, see what’s happening.  
-- **Activity Cards** — each event with icons, descriptions, and links to maps.  
-- **Calendar Magic** — add events to your Google Calendar or download `.ics` files.  
-- **Countdown** — so you know exactly how many days until the big “I do!” 💍  
-- Fully **mobile-friendly** — looks just as good on your phone as on your laptop.  
+## Project structure
+
+```
+/  (repo root)
+├── index.html
+├── styles.css
+├── script.js
+└── wedding_week_itinerary.csv
+```
 
 ---
 
-## 🗺 How to Use
-1. Open the site link (we’ll share it with you).  
-2. Tap on a day to see the activities.  
-3. Click the **Map** button to find where you’re going.  
-4. Use **Add to Google** or **Download .ics** to save it to your calendar.  
-5. Show up. Have fun. Eat. Dance. Repeat.
+## Features
+
+* 💜 White–purple–blue theme, mobile-first
+* 🗓️ Day tabs with sorted activities (start/end time, title, details)
+* 📍 Map button (Google Maps link or location search)
+* ➕ “Add to Google Calendar” deep link
+* 📥 One-click `.ics` download (Apple/Outlook)
+* 🏷️ Category badges (wedding, meal, tour, free)
+* 🖼️ Optional image per activity
+* ⏳ Countdown to the wedding date
+* ♿ Accessible labels and live regions
 
 ---
 
-## 🛠 Powered By
-- **Google Sheets** for live data
-- **GitHub Pages** for zero-cost hosting
-- **HTML/CSS/JS** for the magic
-- **Lots of Love** from Sean & Maya ❤️
+## File overview (short + key functions)
+
+**index.html** — Markup shell and mount points.
+Holds the header (title/date/countdown), the day tabs `<nav id="tabs">`, the cards grid `<div id="cards">`, and links to `styles.css` + `script.js`.
+
+**styles.css** — All styles.
+Theme variables, layout (banner, frame, grid), components (tabs, cards, badges, buttons), error banner, small responsive tweaks.
+
+**script.js** — Data loading + rendering.
+
+* `load()` – fetches `wedding_week_itinerary.csv`, basic header check, calls `render()`.
+* `parseCSV(text)` – robust, quote-aware CSV parser using `splitCSVLine()`.
+* `splitCSVLine(line)` – safely splits one CSV line (handles quotes/escapes).
+* `normalizeRows(rows)` – groups by Day/Date, maps columns, sorts days & items.
+* `render(days)` – builds tabs, handles day switching, inserts activity cards.
+* `activityCard(item, dateISO)` – one card UI: time, title, description, map/Google/`.ics` buttons, optional image.
+* `googleCal({...})` – builds a Google Calendar add-event URL.
+* `icsFile({...})` – generates a downloadable `.ics` file.
+* Helpers: `fmtDate()`, `daysUntil()`, `isoToGcal()`, `badgeClass()`, `icon()`.
+
+**wedding\_week\_itinerary.csv** — Source of truth for events.
+Header must be exactly:
+
+```
+Day, Date, Start Time, End Time, Activity Name, Description, Location, Map Link, Category, Image URL
+```
+
+Add/edit rows, commit, refresh the site.
 
 ---
-
-## 🚀 Tech Setup (for the curious nerds)
-If you want to run this locally:
-1. Download `index.html`.
-2. Open in any browser.
-3. Or host it on GitHub Pages / Netlify / Cloudflare Pages.
-
----
-
-## 🎯 Goal
-To make sure our guests are always in the loop, stress-free, and fully ready to enjoy the best week ever.  
-Also, because spreadsheets are cool… but pretty websites are cooler.
-
----
-
-*Built with 💜 for all our amazing guests.*
