@@ -30,7 +30,7 @@
 
   /* itinerary pastels (light cards) */
   --pastel-lilac: #f2e7ff; /* wedding */
-  --pastel-sky:   #e8f0ff; /* tour */
+  --pastel-sky:   #e8f0ff; /* tour  (Tel Aviv tour) */
   --pastel-peach: #ffe9d6; /* meal */
   --pastel-stone: #f3f4f6; /* free/other */
 
@@ -148,10 +148,10 @@ img, picture, video, canvas { display:block; max-width:100%; }
    ------------------------- */
 .grid { display: grid; gap: 10px; margin: 12px 0 0; }
 
-/* Light, readable cards by default */
+/* All event cards use the Tel Aviv tour pastel sky color */
 .card {
-  background: var(--pastel-stone);
-  border: 1px solid var(--card-line);
+  background: var(--pastel-sky);     /* Tel Aviv tour color (light mode) */
+  border: 1px solid #cfe0ff;         /* matching border */
   border-radius: var(--radius);
   padding: 14px;
   box-shadow: var(--shadow-sm);
@@ -159,27 +159,21 @@ img, picture, video, canvas { display:block; max-width:100%; }
 
 /* Darker, visible text inside cards */
 .row { display:flex; flex-direction: column; align-items:flex-start; gap: 8px; }
-.time { min-width: 0; display:flex; align-items:center; gap:8px; color: var(--card-muted); font-weight: 600; }
+.time { min-width: 0; display:flex; align-items:center; gap:8px; color: #334155; font-weight: 600; }
 .title { font-weight: 700; color: var(--card-text); }
 .muted { color: var(--card-muted); font-size: 14px; }
 
-/* Category-specific pastel fills (no JS needed, uses :has() on the card) */
-.card:has(.badge.wedding) { background: var(--pastel-lilac); border-color: #e9d5ff; }
-.card:has(.badge.tour)    { background: var(--pastel-sky);   border-color: #cfe0ff; }
-.card:has(.badge.meal)    { background: var(--pastel-peach); border-color: #ffd9b5; }
-/* free/other use stone (default) */
-
-/* Buttons: pastel with dark text for contrast */
+/* Buttons: Map, Google, and ICS all match */
 .btns { display:flex; flex-wrap:wrap; gap:10px; margin-top: 10px; }
 .btn  { width: 100%; justify-content: center; padding: 10px 14px; border-radius: 12px; border: 1px solid transparent; cursor:pointer; text-decoration:none; color: #0f172a; }
-.btn.map    { background: #dbeafe; border-color: #bfdbfe; } /* sky */
-.btn.google { background: #e9d5ff; border-color: #d8b4fe; } /* lilac */
-.btn.ics    { background: #bae6fd; border-color: #7dd3fc; } /* cyan-ish */
+.btn.map,
+.btn.google,
+.btn.ics { background: #dbeafe; border-color: #bfdbfe; } /* same color for all */
 .btn:hover  { filter: brightness(0.99); }
 .btn:active { transform: translateY(0.5px); }
 :where(.btn, .site-tab):focus-visible { outline: 2px solid #93c5fd; outline-offset: 2px; }
 
-/* Badges: subtle but readable on light cards */
+/* Badges (kept subtle) */
 .badge { display:inline-flex; align-items:center; gap:6px; font-size:12px; padding:6px 10px; border-radius:999px; color:#0f172a; background:#e2e8f0; }
 .badge.meal    { background:#f5e9ff; }
 .badge.tour    { background:#dbeafe; }
@@ -232,11 +226,40 @@ img, picture, video, canvas { display:block; max-width:100%; }
   .day-heading { font-size: 18px; }
   .day-sub { font-size: 15px; }
 
-  /* Cards/buttons in desktop layout (keep pastel theme) */
+  /* Desktop layout keeps the same card/button colors */
   .grid { gap: 12px; }
   .row { flex-direction: row; gap: 12px; }
-  .time { min-width: 120px; color: var(--card-muted); }
-  .btn { width: auto; justify-content: center; padding: 8px 12px; } /* pastel colors stay */
+  .time { min-width: 120px; color: #334155; }
+  .btn { width: auto; justify-content: center; padding: 8px 12px; }
+}
+
+/* ===================================================================
+   DARK MODE — pastel tints (no harsh neons)
+   =================================================================== */
+@media (prefers-color-scheme: dark) {
+  /* Soft pastel sky overlay for cards on dark background */
+  .card {
+    background: rgba(191,224,255, .16);   /* #bfe0ff @ 16% for a gentle, pastel feel */
+    border-color: rgba(191,224,255, .32);
+  }
+  .title { color: #f3f7ff; }
+  .muted, .time { color: #d1d9e6; }
+
+  /* Map + Google + ICS: matching pastel buttons */
+  .btn.map,
+  .btn.google,
+  .btn.ics {
+    background: rgba(191,224,255, .22);   /* same pastel sky */
+    border-color: rgba(191,224,255, .38);
+    color: #eff6ff;
+  }
+
+  /* Badges: light pastel pills with dark text for contrast */
+  .badge { color: #0b1220; }
+  .badge.tour    { background: rgba(191,224,255, .60); }
+  .badge.meal    { background: rgba(242,233,255, .65); }
+  .badge.free    { background: rgba(226,232,240, .60); }
+  .badge.wedding { background: rgba(240,227,255, .65); }
 }
 
 /* ===================================================================
