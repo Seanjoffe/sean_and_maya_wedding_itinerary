@@ -145,3 +145,59 @@ body {
 
 /* Responsive tweak */
 @media (max-width: 520px){ .time{min-width: 100px;} }
+
+
+
+/* =========================
+   MOBILE OPTIMIZATIONS
+   ========================= */
+
+/* Base type scale & readable line-height */
+body { line-height: 1.5; }
+
+/* Tighten headings a bit on small screens */
+@media (max-width: 480px) {
+  .hero-title { font-size: clamp(24px, 7vw, 32px); }
+  .section-title { font-size: 18px; }
+  .day-heading { font-size: 17px; }
+  .day-sub { font-size: 15px; }
+  .hero-photo { margin: 16px auto 28px; }
+}
+
+/* Make site tabs more touchable but compact */
+.site-tabs { padding: 8px 12px; gap: 6px; }
+.site-tab { padding: 8px 12px; }
+
+/* Card layout: stack time above content on narrow screens */
+@media (max-width: 520px) {
+  .row { flex-direction: column; gap: 8px; }
+  .time { min-width: 0; font-weight: 600; color: var(--muted); }
+  .card { padding: 14px; border-radius: 14px; }
+  .grid { gap: 10px; }
+}
+
+/* Buttons: full-width, centered, clear hierarchy on mobile */
+@media (max-width: 520px) {
+  .btns { gap: 10px; }
+  .btn { width: 100%; justify-content: center; padding: 10px 14px; }
+}
+
+/* Improve button contrast in DARK MODE */
+@media (prefers-color-scheme: dark) {
+  .btn { color: #fff; border: 1px solid rgba(255,255,255,.08); }
+  .btn.map    { background: #1e2a46; }   /* navy-ish */
+  .btn.google { background: #2a204a; }   /* purple-ish */
+  .btn.ics    { background: #24303e; }   /* slate-ish */
+  .time { color: #cbd5e1; }               /* slightly brighter time text */
+}
+
+/* Countdown pill: slightly larger tap target on mobile */
+@media (max-width: 480px) {
+  .pill { font-size: 14px; padding: 8px 14px; }
+}
+
+/* Extra breathing room at the bottom on mobile (avoid nav overlaps) */
+@media (max-width: 520px) {
+  .site-footer { padding-bottom: 56px; }
+}
+
