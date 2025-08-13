@@ -5,34 +5,61 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Sean & Maya — Wedding Week Itinerary</title>
-  <meta name="description" content="Wedding week itinerary — mobile friendly, loads from a local CSV in this repo." />
+  <meta name="description" content="Wedding week itinerary — mobile-friendly, loads from a local CSV in this repo." />
   <link rel="stylesheet" href="styles.css" />
   <script src="script.js" defer></script>
 </head>
 <body>
+  <!-- ===== Banner with centered countdown (pastel bloom background) ===== -->
   <header class="banner">
     <div class="container inner">
-      <h1>Sean & Maya's Wedding Week</h1>
-      <div class="sub">Villa Nona, Caesarea · <span id="wdate"></span></div>
-      <div class="pill" id="countdown">Loading…</div>
+      <div class="countdown-wrap">
+        <div class="pill" id="countdown">Loading…</div>
+      </div>
     </div>
   </header>
 
-  <main class="container">
-    <section class="frame" aria-label="Day tabs">
-      <nav class="tabs" id="tabs"></nav>
-    </section>
+  <!-- ===== Site tabs (Home / Calendar) ===== -->
+  <nav class="site-tabs" role="tablist" aria-label="Site sections">
+    <a href="#home" data-view="home" class="site-tab" aria-selected="true">Home</a>
+    <a href="#calendar" data-view="calendar" class="site-tab" aria-selected="false">Calendar</a>
+  </nav>
 
-    <section aria-live="polite" aria-busy="true">
-      <h2 id="dayTitle"></h2>
-      <div class="muted">Tap a button to open maps or save to your calendar.</div>
-      <div class="grid" id="cards"></div>
+  <!-- ===== HOME VIEW ===== -->
+  <section id="home" class="view">
+    <div class="container">
+      <header class="hero">
+        <h1 class="hero-title">Sean & Maya's Wedding Week</h1>
+        <p class="hero-sub">
+          <span id="wdate"></span> ·
+          <a class="venue-link" href="https://maps.app.goo.gl/njqM2sQ83jtwhUE38" target="_blank" rel="noreferrer">
+            Villa Nona, Caesarea
+          </a>
+        </p>
+      </header>
+
+      <!-- Couple photo (replace src with your uploaded image path, e.g. assets/sean-maya.jpg) -->
+      <figure class="hero-photo">
+        <img src="assets/couple-placeholder.jpg" alt="Sean and Maya" />
+      </figure>
+    </div>
+  </section>
+
+  <!-- ===== CALENDAR VIEW (all days stacked in one scroll) ===== -->
+  <section id="calendar" class="view hidden" aria-live="polite" aria-busy="true">
+    <div class="container">
+      <h2 class="section-title">Itinerary</h2>
+      <p class="muted">Scroll through each day. Tap a button to open maps or save to your calendar.</p>
+
+      <!-- All days render here -->
+      <div id="calendarDays"></div>
+
       <div id="error" class="error" style="display:none"></div>
-    </section>
-  </main>
+    </div>
+  </section>
 
-  <footer>
-    Built with 💜 for Sean & Maya. Updates sync from a CSV stored in this repository.
+  <footer class="site-footer">
+    Built with 💜 for Sean & Maya.
   </footer>
 </body>
 </html>
