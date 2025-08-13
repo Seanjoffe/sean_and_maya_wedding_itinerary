@@ -123,7 +123,7 @@ function activityCard(item, dateISO){
   const card = document.createElement('div');
   card.className = 'card';
 
-  // Add a category class so CSS can theme per type (works in addition to :has())
+  // Add a category class so CSS can theme per type later if desired
   const variant = categoryVariant(item.category);
   card.classList.add('card--' + variant);
   card.dataset.category = variant;
