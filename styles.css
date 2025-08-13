@@ -60,6 +60,10 @@
     --shadow-sm: 0 1px 2px rgba(0,0,0,.04);
     --shadow-md: 0 6px 24px rgba(15, 23, 42, .06);
   }
+
+  /* Make Home subline and venue link dark/readable in light mode */
+  .hero-sub { color: var(--text); }
+  .venue-link { color: var(--text); text-decoration-color: currentColor; }
 }
 
 /* -------------------------
