@@ -23,6 +23,9 @@
   --muted: #94a3b8;
   --ring: #1f2937;
 
+  /* subline/venue default (DARKER by default for readability in light mode too) */
+  --subtext: #1f2937; /* slate-800 */
+
   /* soft tints */
   --soft:        #0f172a;
   --soft-purple: #1a1630;
@@ -45,7 +48,7 @@
   --radius: 16px;
 }
 
-/* Light mode page vars (cards stay light either way) */
+/* Light mode tokens (cards stay light either way) */
 @media (prefers-color-scheme: light) {
   :root {
     --bg: #ffffff;
@@ -58,11 +61,17 @@
     --soft-blue:   #ECF3FF;
     --shadow-sm: 0 1px 2px rgba(0,0,0,.04);
     --shadow-md: 0 6px 24px rgba(15, 23, 42, .06);
+    /* keep --subtext dark in light mode */
+    --subtext: #1f2937;
   }
+}
 
-  /* Ensure date/location subline is dark on ALL screen sizes */
-  .hero-sub  { color: #1f2937; }               /* slate-800 */
-  .venue-link { color: #1f2937; text-decoration-color: currentColor; }
+/* Dark mode tokens */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* lighten subline/venue for dark backgrounds */
+    --subtext: #d1d9e6; /* slate-300-ish */
+  }
 }
 
 /* -------------------------
@@ -133,8 +142,8 @@ img, picture, video, canvas { display:block; max-width:100%; }
   font-size: clamp(28px, 9vw, 42px);
   margin: 0; line-height: 1.1;
 }
-.hero-sub { color: #e2e8f0; margin: 10px 0 0; font-weight: 500; } /* dark-mode default */
-.venue-link { color: #f8fafc; text-decoration: underline; text-underline-offset: 3px; }
+.hero-sub   { color: var(--subtext); margin: 10px 0 0; font-weight: 500; }
+.venue-link { color: var(--subtext); text-decoration: underline; text-underline-offset: 3px; }
 
 /* Couple photo — fuller bleed on mobile */
 .hero-photo { margin: 16px -16px 32px; }
