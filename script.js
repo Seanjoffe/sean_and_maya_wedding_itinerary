@@ -5,7 +5,7 @@ const COUPLE = {
   weddingDateISO: '2025-08-31',
   venueMap: 'https://maps.app.goo.gl/njqM2sQ83jtwhUE38'
 };
-const CSV_LOCAL_PATH = 'wedding_week_itinerary.csv';
+const CSV_LOCAL_PATH = '/wedding_week_itinerary.csv'; // root-relative so it loads at /calendar too
 const EXPECTED_HEADERS = [
   'Day','Date','Start Time','End Time','Activity Name','Description','Location','Map Link','Category','Image URL'
 ];
@@ -275,14 +275,41 @@ async function load(){
       el.innerHTML = 'No rows found after parsing the CSV.';
     }
 
-    // Router
-    function route() {
-      const view = (location.hash.replace('#','') || 'home');
-      showView(view);
-      if (view === 'calendar') renderCalendarAll(days);
-    }
-    window.addEventListener('hashchange', route);
-    route(); // initial
+// ---------- Router (clean URLs: /home, /calendar) ----------
+function currentViewFromPath() {
+  const seg = location.pathname.replace(/\/+$/, '').split('/').pop();
+  return (seg === 'calendar' || seg === 'home') ? seg : 'home';
+}
+
+function performRoute() {
+  const view = currentViewFromPath();
+  showView(view);
+  if (view === 'calendar') renderCalendarAll(days);
+  // reflect active tab
+  document.querySelectorAll('.site-tab').forEach(a =>
+    a.setAttribute('aria-selected', a.dataset.view === view ? 'true' : 'false')
+  );
+}
+
+function navigate(view) {
+  const path = view === 'calendar' ? '/calendar' : '/home';
+  history.pushState({ view }, '', path);
+  performRoute();
+}
+
+// Intercept tab clicks (prevent full page load)
+document.addEventListener('click', (e) => {
+  const a = e.target.closest('.site-tab');
+  if (!a) return;
+  e.preventDefault();
+  navigate(a.dataset.view);
+});
+
+// Back/forward buttons
+window.addEventListener('popstate', performRoute);
+
+// Initial route
+performRoute();
 
   } catch (e) {
     console.error('CSV load failed:', e);
