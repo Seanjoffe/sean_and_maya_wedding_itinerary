@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <!-- Structure-only HTML. Styles & JS are external. -->
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <title>Maya & Sean — Wedding Week Itinerary</title>
+  <meta name="description" content="Wedding week itinerary — mobile-friendly, loads from a local CSV in this repo." />
+
+  <!-- Theme color for mobile address bar -->
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#bfe0ff" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)"  content="#0b1220" />
+
+  <!-- Font perf: preconnect + cursive heading font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
+
+  <!-- Root-relative assets so they work at /home and /calendar -->
+  <link rel="stylesheet" href="/styles.css?v=11" />
+  <script src="/script.js" defer></script>
+</head>
+<body>
+  <!-- ===== Banner with centered countdown (pastel bloom background) ===== -->
+  <header class="banner">
+    <div class="container inner">
+      <div class="countdown-wrap">
+        <div class="pill" id="countdown">Loading…</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== Site tabs (clean paths; JS intercepts clicks) ===== -->
+  <nav class="site-tabs" role="tablist" aria-label="Site sections">
+    <a href="/home" data-view="home" class="site-tab" aria-selected="true">Home</a>
+    <a href="/calendar" data-view="calendar" class="site-tab" aria-selected="false">Calendar</a>
+  </nav>
+
+  <!-- ===== HOME VIEW ===== -->
+  <section id="home" class="view">
+    <div class="container">
+      <header class="hero">
+        <h1 class="hero-title">Maya & Sean's Wedding Week</h1>
+        <p class="hero-sub">
+          <span id="wdate"></span> ·
+          <a class="venue-link" href="https://maps.app.goo.gl/njqM2sQ83jtwhUE38" target="_blank" rel="noreferrer noopener">
+            Villa Nona, Caesarea
+          </a>
+        </p>
+      </header>
+
+      <!-- Couple photo -->
+      <figure class="hero-photo">
+        <img
+          src="/assets/landing_page_staring_at_each_other.jpeg"
+          alt="Sean and Maya"
+          width="1600" height="1067"
+          fetchpriority="high"
+          decoding="async"
+        />
+      </figure>
+    </div>
+  </section>
+
+  <!-- ===== CALENDAR VIEW (all days stacked in one scroll) ===== -->
+  <section id="calendar" class="view hidden" aria-live="polite" aria-busy="true">
+    <div class="container">
+      <h2 class="section-title">Itinerary</h2>
+      <p class="muted">Scroll through each day. Tap a button to open maps or save to your calendar.</p>
+
+      <!-- All days render here -->
+      <div id="calendarDays"></div>
+
+      <div id="error" class="error" style="display:none"></div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    Built with 💜 from Maya & Sean.
+  </footer>
+</body>
+</html>
