@@ -14,7 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
 
   <!-- Root-relative assets so they work at /home and /calendar -->
-  <link rel="stylesheet" href="/styles.css?v=15" />
+  <link rel="stylesheet" href="/styles.css?v=16" />
   <script src="/script.js" defer></script>
 </head>
 <body>
@@ -118,10 +118,20 @@
       <h2 class="section-title">Contacts</h2>
       <p class="muted">Important people and emergency info for the week.</p>
 
-      <!-- Important contacts (stacked list, no headers) -->
-      <div class="card">
-        <div id="contactsList"></div>
-        <p id="contactsHelp" class="visually-hidden">Tap a phone to call or open WhatsApp.</p>
+      <!-- Important contacts (desktop table; mobile compact via CSS) -->
+      <div class="card" style="padding:0">
+        <table id="contactsTable" aria-describedby="contactsHelp" style="width:100%; border-collapse:collapse">
+          <thead>
+            <tr>
+              <th scope="col" style="text-align:left; padding:12px">Name</th>
+              <th scope="col" style="text-align:left; padding:12px">Phone</th>
+              <th scope="col" style="text-align:left; padding:12px">Notes</th>
+              <th scope="col" style="text-align:left; padding:12px">Actions</th>
+            </tr>
+          </thead>
+          <tbody><!-- populated by script.js --></tbody>
+        </table>
+        <p id="contactsHelp" class="visually-hidden">Tap Call or WhatsApp to contact.</p>
       </div>
 
       <!-- Emergency numbers (from CSV Category=Emergency) -->
