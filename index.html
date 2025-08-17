@@ -31,6 +31,7 @@
   <nav class="site-tabs" role="tablist" aria-label="Site sections">
     <a href="/home" data-view="home" class="site-tab" aria-selected="true">Home</a>
     <a href="/calendar" data-view="calendar" class="site-tab" aria-selected="false">Calendar</a>
+    <a href="/explore" data-view="explore" class="site-tab" aria-selected="false">Explore</a>
   </nav>
 
   <!-- ===== HOME VIEW ===== -->
@@ -69,6 +70,44 @@
       <div id="calendarDays"></div>
 
       <div id="error" class="error" style="display:none"></div>
+    </div>
+  </section>
+
+  <!-- ===== EXPLORE VIEW (recommendations) ===== -->
+  <section id="explore" class="view hidden" aria-live="polite" aria-busy="true">
+    <div class="container">
+      <h2 class="section-title">Explore</h2>
+      <p class="muted">Our favorite restaurants, bars, and cafés. Filter, search, and open maps.</p>
+
+      <!-- Controls -->
+      <div class="grid" style="margin-top:8px">
+        <div role="search" class="row" style="gap:10px">
+          <input id="exploreSearch" type="search" placeholder="Search by name or address" aria-label="Search places"
+                 style="padding:10px 12px; border-radius:12px; border:1px solid rgba(15,23,42,.15); width:100%; background:var(--surface); color:var(--text);" />
+          <div class="btns" style="margin:0">
+            <button id="exploreSortAZ" class="btn" type="button" aria-pressed="false">Sort A–Z</button>
+            <button id="exploreClear" class="btn" type="button">Clear filters</button>
+          </div>
+        </div>
+
+        <!-- Chips (Categories & Subcategories) -->
+        <div>
+          <p class="muted" style="margin:0 0 6px">Categories</p>
+          <div id="chipCategories" class="chips" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+        </div>
+        <div>
+          <p class="muted" style="margin:0 0 6px">Subcategories</p>
+          <div id="chipSubcategories" class="chips" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+        </div>
+      </div>
+
+      <!-- Result count -->
+      <p class="muted" style="margin:12px 0 0"><span id="exploreCount">0 places</span></p>
+
+      <!-- Results grid -->
+      <div id="exploreGrid" class="grid" style="margin-top:10px"></div>
+
+      <div id="exploreError" class="error" style="display:none"></div>
     </div>
   </section>
 
