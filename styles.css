@@ -463,7 +463,7 @@ img, picture, video, canvas { display:block; max-width:100%; }
   margin: 8px 0 0 18px;
 }
 #sirenBlock a {
-  color: inherit;
+  color: var(--blue);
   text-decoration: underline;
   text-underline-offset: 3px;
   font-weight: 600;
@@ -494,5 +494,50 @@ img, picture, video, canvas { display:block; max-width:100%; }
 }
 /* Optional: a touch more breathing room on the action row */
 #contactsList .btns { margin-top: 8px; }
+
+
+/* ===== CONTACTS: compact stacked cards ===== */
+
+/* Keep action buttons inline (no full-width) and tighten padding */
+#contactsTable .btn {
+  width: auto;
+  padding: 6px 10px;
+}
+
+/* Actions row: inline, single line if possible */
+#contactsTable tbody td[data-label="Actions"] {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+
+/* Overall compaction */
+@media (max-width: 640px) {
+  #contactsTable tr {
+    margin: 8px 0;
+    padding: 10px 12px;
+  }
+  #contactsTable tbody td {
+    padding: 6px 8px;
+  }
+
+  /* Hide the auto-generated labels to save vertical space */
+  #contactsTable tbody td::before {
+    content: none;
+  }
+
+  /* If a Phone row exists, hide it on mobile to remove extra lines */
+  #contactsTable tbody td[data-label="Phone"] {
+    display: none;
+  }
+
+  /* Slightly tighten the actions row on mobile */
+  #contactsTable tbody td[data-label="Actions"] {
+    padding-top: 4px;
+    gap: 8px;
+  }
+}
+
 
 
