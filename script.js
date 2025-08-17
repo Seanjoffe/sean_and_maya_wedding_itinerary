@@ -5,11 +5,8 @@ const COUPLE = {
   weddingDateISO: '2025-08-31',
   venueMap: 'https://maps.app.goo.gl/njqM2sQ83jtwhUE38'
 };
-const CSV_LOCAL_PATH = '/wedding_week_itinerary.csv'; // root-relative so it loads at /calendar too
-const CSV_EXPLORE_PATH = '/wedding_week_explore.csv'; // NEW: Explore data
-const EXPECTED_HEADERS = [
-  'Day','Date','Start Time','End Time','Activity Name','Description','Location','Map Link','Category','Image URL'
-];
+const CSV_LOCAL_PATH   = '/wedding_week_itinerary.csv'; // itinerary data
+const CSV_EXPLORE_PATH = '/wedding_week_explore.csv';   // explore data
 
 // ================= UTILITIES =================
 function fmtDate(iso){ try { return new Date(iso).toLocaleDateString(); } catch { return iso; } }
@@ -30,26 +27,7 @@ function icsFile({title, details, location, startISO, endISO}){
   return new Blob([body],{type:'text/calendar;charset=utf-8'});
 }
 
-// ================= CSV PARSING (LOCAL) =================
-function parseCSV(text){
-  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);             // strip BOM
-  const lines = text.split(/\r?\n/);
-  while(lines.length && !lines[lines.length-1].trim()) lines.pop();     // trim trailing blanks
-  if (!lines.length) return [];
-
-  const headerCells = splitCSVLine(lines[0]).map(h => h.trim());
-  const headerSet = new Set(headerCells);
-  if (!headerSet.has('Day') || !headerSet.has('Date')) {
-    console.warn('Header row missing expected fields. Found:', headerCells);
-  }
-
-  const rows = lines.slice(1).map(line => {
-    const cells = splitCSVLine(line).map(s => s.replace(/^"|"$/g,'').trim());
-    const obj = {}; headerCells.forEach((h,i)=> obj[h] = (cells[i] ?? ''));
-    return obj;
-  });
-  return normalizeRows(rows);
-}
+// Shared CSV line splitter
 function splitCSVLine(line){
   const out = []; let cur = ''; let q=false;
   for(let i=0;i<line.length;i++){
@@ -61,7 +39,24 @@ function splitCSVLine(line){
   out.push(cur); return out;
 }
 
-// ================= NORMALIZE / MAP (ITINERARY) =================
+// ================= CSV PARSING (ITINERARY) =================
+function parseCSV(text){
+  if (!text) return [];
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);             // strip BOM
+  const lines = text.split(/\r?\n/);
+  while(lines.length && !lines[lines.length-1].trim()) lines.pop();     // trim trailing blanks
+  if (!lines.length) return [];
+
+  const headerCells = splitCSVLine(lines[0]).map(h => h.trim());
+
+  const rows = lines.slice(1).map(line => {
+    const cells = splitCSVLine(line).map(s => s.replace(/^"|"$/g,'').trim());
+    const obj = {}; headerCells.forEach((h,i)=> obj[h] = (cells[i] ?? ''));
+    return obj;
+  });
+  return normalizeRows(rows);
+}
+
 function normalizeRows(rows){
   const grouped = {};
   for(const r of rows){
@@ -244,6 +239,7 @@ function renderCalendarAll(days){
 
 // ================= EXPLORE: parsing & state =================
 function parseCSVExplore(text){
+  if (!text) return [];
   if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
   const lines = text.split(/\r?\n/).filter(l => l.trim().length);
   if (!lines.length) return [];
@@ -275,11 +271,12 @@ function uniqueSorted(arr){ return Array.from(new Set(arr.filter(Boolean))).sort
 
 function buildChips(values, containerId, selectedSet, onChange){
   const wrap = document.getElementById(containerId);
+  if (!wrap) return;
   wrap.innerHTML = '';
   values.forEach(v => {
     const b = document.createElement('button');
     b.type = 'button';
-    b.className = 'chip';          // styled later via CSS; works without it
+    b.className = 'chip';
     b.textContent = v;
     b.setAttribute('aria-pressed', selectedSet.has(v) ? 'true' : 'false');
     b.dataset.value = v;
@@ -374,8 +371,9 @@ function applyExploreFilters(){
 function renderExplore(){
   const grid = document.getElementById('exploreGrid');
   const count = document.getElementById('exploreCount');
-  const results = applyExploreFilters();
+  if (!grid || !count) return;
 
+  const results = applyExploreFilters();
   grid.innerHTML = '';
   results.forEach(p => grid.appendChild(exploreCard(p)));
   count.textContent = `${results.length} place${results.length===1?'':'s'}`;
@@ -412,7 +410,6 @@ async function ensureExploreLoaded(){
       EXPLORE.selectedCats.clear();
       EXPLORE.selectedSubs.clear();
       if (search) search.value = '';
-      // reset chip states
       document.querySelectorAll('#chipCategories .chip, #chipSubcategories .chip').forEach(b => b.setAttribute('aria-pressed','false'));
       EXPLORE.sortAZ = false;
       if (sortBtn) sortBtn.setAttribute('aria-pressed','false');
@@ -505,8 +502,10 @@ async function load(){
   } catch (e) {
     console.error('CSV load failed:', e);
     const el = document.getElementById('error');
-    el.style.display = 'block';
-    el.innerHTML = 'Could not load <code>'+CSV_LOCAL_PATH+'</code>.';
+    if (el) {
+      el.style.display = 'block';
+      el.innerHTML = 'Could not load <code>'+CSV_LOCAL_PATH+'</code>.';
+    }
     document.querySelector('#calendar')?.setAttribute('aria-busy','false');
 
     // Router still needs to work for Explore even if itinerary fails
