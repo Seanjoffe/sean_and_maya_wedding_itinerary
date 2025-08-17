@@ -47,6 +47,28 @@ function waLink(phone){
   return digits ? ('https://wa.me/' + digits) : '';
 }
 
+// vCard helper (for long-press add-contact)
+function vcardBlob(fullName, phoneRaw){
+  const safe = s => String(s||'').replace(/\r?\n/g,' ').trim();
+  const name = safe(fullName);
+  // naive split: last word -> last name; rest -> first name
+  const parts = name.split(/\s+/);
+  const last  = parts.length>1 ? parts.pop() : '';
+  const first = parts.join(' ');
+  const phone = String(phoneRaw||'').replace(/[^\d+]/g,''); // allow '+' and digits
+
+  const lines = [
+    'BEGIN:VCARD',
+    'VERSION:3.0',
+    `N:${last};${first};;;`,
+    `FN:${name}`,
+    phone ? `TEL;TYPE=CELL:${phone}` : '',
+    'END:VCARD'
+  ].filter(Boolean).join('\r\n');
+
+  return new Blob([lines], { type: 'text/vcard;charset=utf-8' });
+}
+
 // ================= CSV PARSING (ITINERARY) =================
 function parseCSV(text){
   if (!text) return [];
@@ -467,50 +489,92 @@ const CONTACTS = {
   emergency: []   // Category = "Emergency"
 };
 
-function renderContactsTable(){
-  const tbody = document.querySelector('#contactsTable tbody');
-  if (!tbody) return;
-  tbody.innerHTML = '';
+// NEW: stacked contacts list (no headers)
+function renderContactsList(){
+  const table = document.getElementById('contactsTable');
+  if (table) table.style.display = 'none'; // hide old table
+  let list = document.getElementById('contactsList');
+  if (!list) {
+    list = document.createElement('div');
+    list.id = 'contactsList';
+    // insert right after the table container
+    table?.parentNode?.insertBefore(list, table.nextSibling);
+  }
+  list.innerHTML = '';
 
   CONTACTS.contacts.forEach(c => {
-    const tr = document.createElement('tr');
+    const card = document.createElement('div');
+    card.className = 'card';
+    // Top row: name + notes
+    const top = document.createElement('div');
+    top.style.display = 'flex';
+    top.style.alignItems = 'center';
+    top.style.gap = '8px';
+    top.style.flexWrap = 'wrap';
+    top.style.justifyContent = 'space-between';
 
-    const tdName = document.createElement('td');
-    tdName.style.padding = '10px 12px';
-    tdName.textContent = c.name || '';
-    tdName.dataset.label = 'Name';
+    const nameEl = document.createElement('div');
+    nameEl.className = 'title';
+    nameEl.textContent = c.name || '';
 
-    const tdPhone = document.createElement('td');
-    tdPhone.style.padding = '10px 12px';
-    tdPhone.dataset.label = 'Phone';
-    if (c.phone) {
-      const a = document.createElement('a');
-      a.href = telLink(c.phone);
-      a.textContent = c.phone;
-      a.rel = 'noreferrer';
-      tdPhone.appendChild(a);
-    }
+    const noteEl = document.createElement('div');
+    noteEl.className = 'muted';
+    noteEl.style.marginLeft = 'auto';
+    noteEl.textContent = c.notes || '';
 
-    const tdNotes = document.createElement('td');
-    tdNotes.style.padding = '10px 12px';
-    tdNotes.textContent = c.notes || '';
-    tdNotes.dataset.label = 'Notes';
+    top.appendChild(nameEl);
+    if (c.notes) top.appendChild(noteEl);
 
-    const tdActions = document.createElement('td');
-    tdActions.style.padding = '10px 12px';
-    tdActions.style.display = 'flex';
-    tdActions.style.gap = '8px';
-    tdActions.dataset.label = 'Actions';
+    // Actions: Call + WhatsApp (WhatsApp only if number parses)
+    const btns = document.createElement('div');
+    btns.className = 'btns';
+
     if (c.phone) {
       const call = document.createElement('a');
       call.className = 'btn';
       call.href = telLink(c.phone);
       call.textContent = '📞 Call';
-      call.rel = 'noreferrer';
-      call.style.padding = '6px 10px';
-      tdActions.appendChild(call);
+      call.setAttribute('aria-label', `Call ${c.name || 'contact'}`);
+      call.style.padding = '8px 12px';
+      btns.appendChild(call);
 
-      const waUrl = waLink(c.phone); // only add if valid
+      // Long-press → vCard (prefilled name + phone)
+      (function attachLongPress(el, name, phone){
+        let timer = null;
+        let longPressed = false;
+
+        const clear = () => { if (timer) { clearTimeout(timer); timer=null; } };
+        const start = () => {
+          clear();
+          longPressed = false;
+          timer = setTimeout(() => {
+            longPressed = true;
+            // create and download vCard
+            const blob = vcardBlob(name, phone);
+            const url  = URL.createObjectURL(blob);
+            const a    = document.createElement('a');
+            a.href = url;
+            a.download = (name || 'contact').replace(/\s+/g,'_') + '.vcf';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
+          }, 600); // ~600ms hold
+        };
+
+        el.addEventListener('mousedown', start);
+        el.addEventListener('touchstart', start, {passive: true});
+        ['mouseup','mouseleave','touchend','touchcancel'].forEach(evt =>
+          el.addEventListener(evt, clear)
+        );
+        el.addEventListener('click', (e)=>{
+          if (longPressed) {
+            e.preventDefault(); // prevent the tel: after long-press
+            longPressed = false;
+          }
+        });
+      })(call, c.name, c.phone);
+
+      const waUrl = waLink(c.phone);
       if (waUrl) {
         const wa = document.createElement('a');
         wa.className = 'btn';
@@ -518,17 +582,15 @@ function renderContactsTable(){
         wa.target = '_blank';
         wa.rel = 'noreferrer';
         wa.textContent = '💬 WhatsApp';
-        wa.style.padding = '6px 10px';
-        tdActions.appendChild(wa);
+        wa.setAttribute('aria-label', `WhatsApp ${c.name || 'contact'}`);
+        wa.style.padding = '8px 12px';
+        btns.appendChild(wa);
       }
     }
 
-    tr.appendChild(tdName);
-    tr.appendChild(tdPhone);
-    tr.appendChild(tdNotes);
-    tr.appendChild(tdActions);
-
-    tbody.appendChild(tr);
+    card.appendChild(top);
+    if (c.phone) card.appendChild(btns);
+    list.appendChild(card);
   });
 }
 
@@ -576,7 +638,6 @@ function wireSirenLinks(){
     (r.category || '').trim().toLowerCase() === 'siren' && r.link
   );
 
-  // normalize names: lowercase, no spaces
   const norm = s => String(s||'').toLowerCase().replace(/\s+/g,'');
   const mapByNorm = Object.fromEntries(sirenRows.map(r => [norm(r.name), r.link]));
 
@@ -590,7 +651,7 @@ function wireSirenLinks(){
 }
 
 function renderContactsView(){
-  renderContactsTable();
+  renderContactsList();   // swapped from table → stacked list
   renderEmergencyList();
   wireSirenLinks();
   document.querySelector('#contacts')?.setAttribute('aria-busy','false');
