@@ -475,3 +475,64 @@ img, picture, video, canvas { display:block; max-width:100%; }
   #contactsTable thead th { background: rgba(191,224,255,.12); }
   #emergencyList li { background: #0f172a; }
 }
+
+
+/* Utility used in HTML for screen-reader-only text */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0);
+  white-space: nowrap; border: 0;
+}
+
+/* Stacked "cards" layout for the contacts table on small screens */
+@media (max-width: 640px) {
+  #contactsTable {
+    border: 0;
+    min-width: 0;              /* override earlier 520px so no sideways scroll */
+  }
+  #contactsTable thead {
+    display: none;             /* hide header row on mobile */
+  }
+  #contactsTable,
+  #contactsTable tbody,
+  #contactsTable tr,
+  #contactsTable td {
+    display: block;
+    width: 100%;
+  }
+  #contactsTable tr {
+    margin: 12px 0;
+    padding: 8px 10px;
+    border: 1px solid var(--ring);
+    border-radius: 12px;
+    background: var(--surface);
+  }
+  #contactsTable tbody td {
+    border: 0;                 /* remove row separators inside the card */
+    padding: 8px 10px;
+    display: flex;             /* label on left, value on right */
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  #contactsTable tbody td::before {
+    content: attr(data-label); /* uses data-label set by JS */
+    font-weight: 700;
+    color: var(--card-text);
+  }
+  /* Make the Actions row wrap nicely */
+  #contactsTable tbody td[data-label="Actions"] {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  #contactsTable tbody td[data-label="Actions"]::before {
+    margin-right: 8px;
+  }
+  #contactsTable td .btn {
+    width: auto;               /* keep buttons compact */
+  }
+}
+
