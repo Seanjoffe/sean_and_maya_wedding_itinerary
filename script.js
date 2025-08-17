@@ -478,9 +478,11 @@ function renderContactsTable(){
     const tdName = document.createElement('td');
     tdName.style.padding = '10px 12px';
     tdName.textContent = c.name || '';
+    tdName.dataset.label = 'Name';
 
     const tdPhone = document.createElement('td');
     tdPhone.style.padding = '10px 12px';
+    tdPhone.dataset.label = 'Phone';
     if (c.phone) {
       const a = document.createElement('a');
       a.href = telLink(c.phone);
@@ -492,11 +494,13 @@ function renderContactsTable(){
     const tdNotes = document.createElement('td');
     tdNotes.style.padding = '10px 12px';
     tdNotes.textContent = c.notes || '';
+    tdNotes.dataset.label = 'Notes';
 
     const tdActions = document.createElement('td');
     tdActions.style.padding = '10px 12px';
     tdActions.style.display = 'flex';
     tdActions.style.gap = '8px';
+    tdActions.dataset.label = 'Actions';
     if (c.phone) {
       const call = document.createElement('a');
       call.className = 'btn';
@@ -506,8 +510,7 @@ function renderContactsTable(){
       call.style.padding = '6px 10px';
       tdActions.appendChild(call);
 
-      // FIX: only render WhatsApp if we have a valid wa.me URL
-      const waUrl = waLink(c.phone);
+      const waUrl = waLink(c.phone); // only add if valid
       if (waUrl) {
         const wa = document.createElement('a');
         wa.className = 'btn';
