@@ -6,6 +6,7 @@ const COUPLE = {
   venueMap: 'https://maps.app.goo.gl/njqM2sQ83jtwhUE38'
 };
 const CSV_LOCAL_PATH = '/wedding_week_itinerary.csv'; // root-relative so it loads at /calendar too
+const CSV_EXPLORE_PATH = '/wedding_week_explore.csv'; // NEW: Explore data
 const EXPECTED_HEADERS = [
   'Day','Date','Start Time','End Time','Activity Name','Description','Location','Map Link','Category','Image URL'
 ];
@@ -60,7 +61,7 @@ function splitCSVLine(line){
   out.push(cur); return out;
 }
 
-// ================= NORMALIZE / MAP =================
+// ================= NORMALIZE / MAP (ITINERARY) =================
 function normalizeRows(rows){
   const grouped = {};
   for(const r of rows){
@@ -241,7 +242,194 @@ function renderCalendarAll(days){
   document.querySelector('#calendar')?.setAttribute('aria-busy','false');
 }
 
-// ================= Simple router (Home / Calendar) =================
+// ================= EXPLORE: parsing & state =================
+function parseCSVExplore(text){
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+  const lines = text.split(/\r?\n/).filter(l => l.trim().length);
+  if (!lines.length) return [];
+  const headers = splitCSVLine(lines[0]).map(h => h.trim());
+  const idx = (name) => headers.findIndex(h => h.toLowerCase() === name.toLowerCase());
+  const iName = idx('Name'), iCat = idx('Category'), iSub = idx('Subcategory'), iAddr = idx('Address'), iMap = idx('Map Link');
+  return lines.slice(1).map(line => {
+    const cells = splitCSVLine(line).map(s => s.replace(/^"|"$/g,'').trim());
+    return {
+      name: cells[iName] || '',
+      category: cells[iCat] || '',
+      subcategory: cells[iSub] || '',
+      address: cells[iAddr] || '',
+      map: cells[iMap] || ''
+    };
+  });
+}
+
+const EXPLORE = {
+  loaded: false,
+  all: [],
+  search: '',
+  sortAZ: false,
+  selectedCats: new Set(),
+  selectedSubs: new Set()
+};
+
+function uniqueSorted(arr){ return Array.from(new Set(arr.filter(Boolean))).sort((a,b)=> a.localeCompare(b)); }
+
+function buildChips(values, containerId, selectedSet, onChange){
+  const wrap = document.getElementById(containerId);
+  wrap.innerHTML = '';
+  values.forEach(v => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'chip';          // styled later via CSS; works without it
+    b.textContent = v;
+    b.setAttribute('aria-pressed', selectedSet.has(v) ? 'true' : 'false');
+    b.dataset.value = v;
+    b.addEventListener('click', ()=>{
+      if(selectedSet.has(v)) selectedSet.delete(v); else selectedSet.add(v);
+      b.setAttribute('aria-pressed', selectedSet.has(v) ? 'true' : 'false');
+      onChange();
+    });
+    wrap.appendChild(b);
+  });
+}
+
+function exploreCard(place){
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  const row = document.createElement('div');
+  row.className = 'row';
+
+  const body = document.createElement('div');
+  body.style.flex = '1';
+
+  const head = document.createElement('div');
+  head.style.display = 'flex'; head.style.alignItems = 'center';
+  head.style.justifyContent = 'space-between'; head.style.gap = '8px';
+
+  const title = document.createElement('div');
+  title.className = 'title';
+  title.textContent = place.name || '';
+
+  const badges = document.createElement('div');
+  badges.style.display = 'flex'; badges.style.gap = '6px'; badges.style.flexWrap = 'wrap';
+  if (place.category) {
+    const cat = document.createElement('span'); cat.className = 'badge'; cat.textContent = place.category;
+    badges.appendChild(cat);
+  }
+  if (place.subcategory) {
+    const sub = document.createElement('span'); sub.className = 'badge'; sub.textContent = place.subcategory;
+    badges.appendChild(sub);
+  }
+
+  head.appendChild(title); head.appendChild(badges);
+
+  const addr = document.createElement('div');
+  addr.className = 'muted';
+  addr.style.marginTop = '4px';
+  addr.textContent = place.address || '';
+
+  const btns = document.createElement('div');
+  btns.className = 'btns';
+
+  if (place.map || place.address){
+    const a = document.createElement('a');
+    a.className = 'btn map'; a.target = '_blank'; a.rel = 'noreferrer';
+    a.href = place.map || ('https://maps.google.com/?q=' + encodeURIComponent(place.address || place.name));
+    a.textContent = '📍 Open Map';
+    a.setAttribute('aria-label', `Open map for ${place.name}`);
+    btns.appendChild(a);
+  }
+
+  body.appendChild(head);
+  if (place.address) body.appendChild(addr);
+  body.appendChild(btns);
+
+  row.appendChild(body);
+  card.appendChild(row);
+  return card;
+}
+
+function applyExploreFilters(){
+  const q = EXPLORE.search.trim().toLowerCase();
+  let list = EXPLORE.all.slice();
+
+  if (q) {
+    list = list.filter(p =>
+      (p.name && p.name.toLowerCase().includes(q)) ||
+      (p.address && p.address.toLowerCase().includes(q))
+    );
+  }
+  if (EXPLORE.selectedCats.size){
+    list = list.filter(p => EXPLORE.selectedCats.has((p.category||'').trim()));
+  }
+  if (EXPLORE.selectedSubs.size){
+    list = list.filter(p => EXPLORE.selectedSubs.has((p.subcategory||'').trim()));
+  }
+  if (EXPLORE.sortAZ){
+    list.sort((a,b)=> a.name.localeCompare(b.name));
+  }
+  return list;
+}
+
+function renderExplore(){
+  const grid = document.getElementById('exploreGrid');
+  const count = document.getElementById('exploreCount');
+  const results = applyExploreFilters();
+
+  grid.innerHTML = '';
+  results.forEach(p => grid.appendChild(exploreCard(p)));
+  count.textContent = `${results.length} place${results.length===1?'':'s'}`;
+  document.querySelector('#explore')?.setAttribute('aria-busy','false');
+}
+
+async function ensureExploreLoaded(){
+  if (EXPLORE.loaded) { renderExplore(); return; }
+  try {
+    const res = await fetch(CSV_EXPLORE_PATH + '?cb=' + Date.now());
+    if (!res.ok) throw new Error('EXPLORE CSV HTTP ' + res.status);
+    const text = await res.text();
+    EXPLORE.all = parseCSVExplore(text);
+
+    // Build chips
+    const cats = uniqueSorted(EXPLORE.all.map(p => p.category && p.category.trim()));
+    const subs = uniqueSorted(EXPLORE.all.map(p => p.subcategory && p.subcategory.trim()));
+    buildChips(cats, 'chipCategories', EXPLORE.selectedCats, renderExplore);
+    buildChips(subs, 'chipSubcategories', EXPLORE.selectedSubs, renderExplore);
+
+    // Wire controls
+    const search = document.getElementById('exploreSearch');
+    const sortBtn = document.getElementById('exploreSortAZ');
+    const clearBtn = document.getElementById('exploreClear');
+
+    if (search) search.addEventListener('input', (e)=> { EXPLORE.search = e.target.value || ''; renderExplore(); });
+    if (sortBtn) sortBtn.addEventListener('click', ()=>{
+      EXPLORE.sortAZ = !EXPLORE.sortAZ;
+      sortBtn.setAttribute('aria-pressed', EXPLORE.sortAZ ? 'true' : 'false');
+      renderExplore();
+    });
+    if (clearBtn) clearBtn.addEventListener('click', ()=>{
+      EXPLORE.search = '';
+      EXPLORE.selectedCats.clear();
+      EXPLORE.selectedSubs.clear();
+      if (search) search.value = '';
+      // reset chip states
+      document.querySelectorAll('#chipCategories .chip, #chipSubcategories .chip').forEach(b => b.setAttribute('aria-pressed','false'));
+      EXPLORE.sortAZ = false;
+      if (sortBtn) sortBtn.setAttribute('aria-pressed','false');
+      renderExplore();
+    });
+
+    EXPLORE.loaded = true;
+    renderExplore();
+  } catch (err) {
+    console.error('Explore CSV load failed:', err);
+    const el = document.getElementById('exploreError');
+    if (el) { el.style.display = 'block'; el.textContent = 'Could not load Explore data.'; }
+    document.querySelector('#explore')?.setAttribute('aria-busy','false');
+  }
+}
+
+// ================= Simple router (Home / Calendar / Explore) =================
 function setActiveTab(view) {
   document.querySelectorAll('.site-tab').forEach(a => {
     a.setAttribute('aria-selected', a.dataset.view === view ? 'true' : 'false');
@@ -275,41 +463,44 @@ async function load(){
       el.innerHTML = 'No rows found after parsing the CSV.';
     }
 
-// ---------- Router (clean URLs: /home, /calendar) ----------
-function currentViewFromPath() {
-  const seg = location.pathname.replace(/\/+$/, '').split('/').pop();
-  return (seg === 'calendar' || seg === 'home') ? seg : 'home';
-}
+    // ---------- Router (clean URLs: /home, /calendar, /explore) ----------
+    function currentViewFromPath() {
+      const seg = location.pathname.replace(/\/+$/, '').split('/').pop();
+      return (seg === 'calendar' || seg === 'home' || seg === 'explore') ? seg : 'home';
+    }
 
-function performRoute() {
-  const view = currentViewFromPath();
-  showView(view);
-  if (view === 'calendar') renderCalendarAll(days);
-  // reflect active tab
-  document.querySelectorAll('.site-tab').forEach(a =>
-    a.setAttribute('aria-selected', a.dataset.view === view ? 'true' : 'false')
-  );
-}
+    function performRoute() {
+      const view = currentViewFromPath();
+      showView(view);
+      if (view === 'calendar') renderCalendarAll(days);
+      if (view === 'explore') ensureExploreLoaded();
+      // reflect active tab
+      document.querySelectorAll('.site-tab').forEach(a =>
+        a.setAttribute('aria-selected', a.dataset.view === view ? 'true' : 'false')
+      );
+    }
 
-function navigate(view) {
-  const path = view === 'calendar' ? '/calendar' : '/home';
-  history.pushState({ view }, '', path);
-  performRoute();
-}
+    function navigate(view) {
+      let path = '/home';
+      if (view === 'calendar') path = '/calendar';
+      else if (view === 'explore') path = '/explore';
+      history.pushState({ view }, '', path);
+      performRoute();
+    }
 
-// Intercept tab clicks (prevent full page load)
-document.addEventListener('click', (e) => {
-  const a = e.target.closest('.site-tab');
-  if (!a) return;
-  e.preventDefault();
-  navigate(a.dataset.view);
-});
+    // Intercept tab clicks (prevent full page load)
+    document.addEventListener('click', (e) => {
+      const a = e.target.closest('.site-tab');
+      if (!a) return;
+      e.preventDefault();
+      navigate(a.dataset.view);
+    });
 
-// Back/forward buttons
-window.addEventListener('popstate', performRoute);
+    // Back/forward buttons
+    window.addEventListener('popstate', performRoute);
 
-// Initial route
-performRoute();
+    // Initial route
+    performRoute();
 
   } catch (e) {
     console.error('CSV load failed:', e);
@@ -317,6 +508,33 @@ performRoute();
     el.style.display = 'block';
     el.innerHTML = 'Could not load <code>'+CSV_LOCAL_PATH+'</code>.';
     document.querySelector('#calendar')?.setAttribute('aria-busy','false');
+
+    // Router still needs to work for Explore even if itinerary fails
+    function currentViewFromPath() {
+      const seg = location.pathname.replace(/\/+$/, '').split('/').pop();
+      return (seg === 'explore') ? 'explore' : 'home';
+    }
+    function performRoute() {
+      const view = currentViewFromPath();
+      showView(view);
+      if (view === 'explore') ensureExploreLoaded();
+      document.querySelectorAll('.site-tab').forEach(a =>
+        a.setAttribute('aria-selected', a.dataset.view === view ? 'true' : 'false')
+      );
+    }
+    function navigate(view) {
+      const path = view === 'explore' ? '/explore' : '/home';
+      history.pushState({ view }, '', path);
+      performRoute();
+    }
+    document.addEventListener('click', (e) => {
+      const a = e.target.closest('.site-tab');
+      if (!a) return;
+      e.preventDefault();
+      navigate(a.dataset.view);
+    });
+    window.addEventListener('popstate', performRoute);
+    performRoute();
   }
 }
 load();
