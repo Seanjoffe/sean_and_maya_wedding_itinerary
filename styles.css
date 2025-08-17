@@ -378,3 +378,100 @@ img, picture, video, canvas { display:block; max-width:100%; }
 @media (max-width: 360px) {
   .chip { font-size: 11px; padding: 6px 10px; }
 }
+
+/* ===================================================================
+   CONTACTS TAB (table + emergency list + siren guidance)
+   =================================================================== */
+
+/* Wrap the table if you placed it inside a .card; keeps headers/rows neat */
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 12px;
+}
+
+/* Contacts table */
+#contactsTable {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 520px; /* allow horizontal scroll on tiny screens */
+  background: var(--surface);
+  color: var(--text);
+}
+#contactsTable thead th {
+  text-align: left;
+  font-weight: 700;
+  padding: 12px 12px;
+  background: var(--soft-blue);
+  color: var(--card-text);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  border-bottom: 1px solid var(--ring);
+}
+#contactsTable tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--ring);
+  vertical-align: middle;
+}
+#contactsTable tbody tr:hover {
+  background: rgba(191,224,255,.18); /* subtle hover, works in both themes */
+}
+#contactsTable a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Buttons inside the actions column can be tighter */
+#contactsTable td .btn {
+  padding: 6px 10px;
+  line-height: 1.2;
+}
+
+/* Emergency list block */
+#emergencyList {
+  list-style: none;
+  padding: 0;
+  margin: 6px 0 0;
+}
+#emergencyList li {
+  padding: 8px 10px;
+  border: 1px solid var(--ring);
+  border-radius: 12px;
+  background: var(--surface);
+}
+#emergencyList li + li { margin-top: 8px; }
+#emergencyList a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Siren guidance block — typically inside a .card */
+#sirenBlock {
+  line-height: 1.6;
+}
+#sirenBlock h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  color: var(--card-text);
+}
+#sirenBlock p { margin: 8px 0; }
+#sirenBlock ul, #sirenBlock ol {
+  margin: 8px 0 0 18px;
+}
+#sirenBlock a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 600;
+}
+
+/* Dark mode tweaks for contacts elements */
+@media (prefers-color-scheme: dark) {
+  #contactsTable { background: #0f172a; }
+  #contactsTable thead th { background: rgba(191,224,255,.12); }
+  #emergencyList li { background: #0f172a; }
+}
