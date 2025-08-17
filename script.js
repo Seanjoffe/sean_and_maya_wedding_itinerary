@@ -5,9 +5,9 @@ const COUPLE = {
   weddingDateISO: '2025-08-31',
   venueMap: 'https://maps.app.goo.gl/njqM2sQ83jtwhUE38'
 };
-const CSV_LOCAL_PATH   = '/wedding_week_itinerary.csv'; // itinerary data
-const CSV_EXPLORE_PATH = '/wedding_week_explore.csv';   // explore data
-const CSV_CONTACTS_PATH = '/wedding_week_contacts.csv'; // contacts & emergency data
+const CSV_LOCAL_PATH    = '/wedding_week_itinerary.csv'; // itinerary data
+const CSV_EXPLORE_PATH  = '/wedding_week_explore.csv';   // explore data
+const CSV_CONTACTS_PATH = '/wedding_week_contacts.csv';  // contacts & emergency data
 
 // ================= UTILITIES =================
 function fmtDate(iso){ try { return new Date(iso).toLocaleDateString(); } catch { return iso; } }
@@ -50,13 +50,12 @@ function waLink(phone){
 // ================= CSV PARSING (ITINERARY) =================
 function parseCSV(text){
   if (!text) return [];
-  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);             // strip BOM
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1); // strip BOM
   const lines = text.split(/\r?\n/);
   while(lines.length && !lines[lines.length-1].trim()) lines.pop();     // trim trailing blanks
   if (!lines.length) return [];
 
   const headerCells = splitCSVLine(lines[0]).map(h => h.trim());
-
   const rows = lines.slice(1).map(line => {
     const cells = splitCSVLine(line).map(s => s.replace(/^"|"$/g,'').trim());
     const obj = {}; headerCells.forEach((h,i)=> obj[h] = (cells[i] ?? ''));
@@ -505,17 +504,20 @@ function renderContactsTable(){
       call.textContent = '📞 Call';
       call.rel = 'noreferrer';
       call.style.padding = '6px 10px';
-
-      const wa = document.createElement('a');
-      wa.className = 'btn';
-      wa.href = waLink(c.phone);
-      wa.target = '_blank';
-      wa.rel = 'noreferrer';
-      wa.textContent = '💬 WhatsApp';
-      wa.style.padding = '6px 10px';
-
       tdActions.appendChild(call);
-      if (wa.href) tdActions.appendChild(wa);
+
+      // FIX: only render WhatsApp if we have a valid wa.me URL
+      const waUrl = waLink(c.phone);
+      if (waUrl) {
+        const wa = document.createElement('a');
+        wa.className = 'btn';
+        wa.href = waUrl;
+        wa.target = '_blank';
+        wa.rel = 'noreferrer';
+        wa.textContent = '💬 WhatsApp';
+        wa.style.padding = '6px 10px';
+        tdActions.appendChild(wa);
+      }
     }
 
     tr.appendChild(tdName);
@@ -566,21 +568,22 @@ function renderEmergencyList(){
 }
 
 function wireSirenLinks(){
-  // pick any rows that include a Website/Link for the three anchors
-  const byName = (needle) =>
-    CONTACTS.all.find(r => (r.link && r.name && r.name.toLowerCase().includes(needle)));
+  // Use Category === 'Siren' from CSV and map to three anchors
+  const sirenRows = CONTACTS.all.filter(r =>
+    (r.category || '').trim().toLowerCase() === 'siren' && r.link
+  );
 
-  const hfc = byName('home front') || byName('pikud haoref') || null;
-  const red = byName('red alert') || byName('tzav adom') || null;
-  const shl = byName('shelter') || byName('miklat') || byName('map') || null;
+  // normalize names: lowercase, no spaces
+  const norm = s => String(s||'').toLowerCase().replace(/\s+/g,'');
+  const mapByNorm = Object.fromEntries(sirenRows.map(r => [norm(r.name), r.link]));
 
-  const aHfc = document.getElementById('linkHFC');
-  const aRed = document.getElementById('linkRedAlert');
-  const aShl = document.getElementById('linkShelterMap');
+  const aHfc = document.getElementById('linkHFC');         // Home Front Command
+  const aRed = document.getElementById('linkRedAlert');    // Red Alert: Israel
+  const aShl = document.getElementById('linkShelterMap');  // Interactive TLV Shelter Map
 
-  if (aHfc && hfc) aHfc.href = hfc.link;
-  if (aRed && red) aRed.href = red.link;
-  if (aShl && shl) aShl.href = shl.link;
+  if (aHfc) aHfc.href = mapByNorm['homefrontcommand'] || mapByNorm['homefront'] || aHfc.href || '#';
+  if (aRed) aRed.href = mapByNorm['redalert'] || aRed.href || '#';
+  if (aShl) aShl.href = mapByNorm['interactivetelavivsheltermap'] || mapByNorm['telavivsheltermap'] || mapByNorm['sheltermap'] || aShl.href || '#';
 }
 
 function renderContactsView(){
