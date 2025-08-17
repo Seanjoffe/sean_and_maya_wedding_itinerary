@@ -491,3 +491,43 @@ img, picture, video, canvas { display:block; max-width:100%; }
 
   /* Keep header visible (shows Name, Notes, Actions only) */
 }
+
+
+/* ============================================
+   CONTACTS TABLE — Mobile overflow + compaction
+   ============================================ */
+@media (max-width: 640px) {
+  /* Let the table shrink and wrap on small screens */
+  #contactsTable {
+    min-width: 0;          /* override the base 520px */
+    width: 100%;
+    table-layout: fixed;   /* distribute width and allow wrapping */
+  }
+
+  /* Allow cells to wrap instead of forcing width */
+  #contactsTable th,
+  #contactsTable td {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    padding: 8px 10px;     /* slightly tighter padding for compact rows */
+  }
+
+  /* Keep action buttons inline and compact */
+  #contactsTable td:nth-child(3) a.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: auto;
+    padding: 6px 8px;
+  }
+
+  /* Optional: gentle column widths to balance the row */
+  #contactsTable th:nth-child(1),
+  #contactsTable td:nth-child(1) { width: 40%; } /* Name */
+  #contactsTable th:nth-child(2),
+  #contactsTable td:nth-child(2) { width: 35%; } /* Notes */
+  #contactsTable th:nth-child(3),
+  #contactsTable td:nth-child(3) { width: 25%; } /* Actions */
+}
+
