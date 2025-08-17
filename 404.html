@@ -32,6 +32,7 @@
     <a href="/home" data-view="home" class="site-tab" aria-selected="true">Home</a>
     <a href="/calendar" data-view="calendar" class="site-tab" aria-selected="false">Calendar</a>
     <a href="/explore" data-view="explore" class="site-tab" aria-selected="false">Explore</a>
+    <a href="/contacts" data-view="contacts" class="site-tab" aria-selected="false">Contacts</a>
   </nav>
 
   <!-- ===== HOME VIEW ===== -->
@@ -110,6 +111,73 @@
       <div id="exploreError" class="error" style="display:none"></div>
     </div>
   </section>
+
+  <!-- ===== CONTACTS VIEW ===== -->
+  <section id="contacts" class="view hidden" aria-live="polite" aria-busy="true">
+    <div class="container">
+      <h2 class="section-title">Contacts</h2>
+      <p class="muted">Important people and emergency info for the week.</p>
+
+      <!-- Important contacts (from CSV Category=Contacts) -->
+      <div class="card" style="padding:0">
+        <table class="contacts-table" id="contactsTable" aria-describedby="contactsHelp" style="width:100%; border-collapse:collapse">
+          <thead>
+            <tr>
+              <th scope="col" style="text-align:left; padding:12px">Name</th>
+              <th scope="col" style="text-align:left; padding:12px">Phone</th>
+              <th scope="col" style="text-align:left; padding:12px">Notes</th>
+              <th scope="col" style="text-align:left; padding:12px">Actions</th>
+            </tr>
+          </thead>
+          <tbody><!-- populated by script.js --></tbody>
+        </table>
+        <p id="contactsHelp" class="visually-hidden">Tap a phone to call or open WhatsApp.</p>
+      </div>
+
+      <!-- Emergency numbers (from CSV Category=Emergency) -->
+      <div class="day-group" style="margin-top:18px">
+        <h3 class="day-heading">Emergency Numbers</h3>
+        <ul id="emergencyList" class="list-plain" style="padding-left:18px; margin:8px 0 0">
+          <!-- populated by script.js -->
+        </ul>
+      </div>
+
+      <!-- Siren guidance -->
+      <div class="day-group" style="margin-top:18px">
+        <h3 class="day-heading">In Case a Siren Sounds</h3>
+        <div class="card">
+          <div class="muted">
+            <p>Sirens are very uncommon these days, and when they do happen it’s usually rockets fired from Yemen, and these are very likely to be intercepted before reaching Israel. Still, just in case, here’s what to do:</p>
+            <p><strong>Safest Places (in order of preference):</strong></p>
+            <ul>
+              <li>Your Mamad (protected room at home) — reinforced and safest.</li>
+              <li>A Mamak (shared building shelter) — usually on your building’s ground floor.</li>
+              <li>A Miklat (dedicated bomb shelter) — inside your building or nearby.</li>
+              <li>An interior stairwell — away from windows and openings.</li>
+              <li>An internal room — few or no outside walls or windows.</li>
+              <li>A public shelter — like an opened communal shelter or underground station.</li>
+            </ul>
+            <p><strong>If you’re outside:</strong> Enter the nearest building. If you can’t, lie down and protect your head.</p>
+            <p><strong>If you’re in a car:</strong> Pull over, get out, and move to a safe place. If you can’t, lie down beside the car and cover your head.</p>
+            <p>Stay inside for at least 10 minutes, or until officials say it’s safe.</p>
+  
+            <h4 class="day-heading" style="margin-top:12px">Stay Connected &amp; Prepared</h4>
+            <p>Download these apps for real-time alerts:</p>
+            <ul>
+              <li><a id="linkHFC" href="#" target="_blank" rel="noreferrer">Home Front Command (official)</a></li>
+              <li><a id="linkRedAlert" href="#" target="_blank" rel="noreferrer">Red Alert: Israel (fast notifications)</a></li>
+            </ul>
+            <p>Check this map to find your closest shelter in Tel Aviv:<br>
+              <a id="linkShelterMap" href="#" target="_blank" rel="noreferrer">Interactive Tel Aviv Shelter Map</a>
+            </p>
+          </div>
+        </div>
+  
+        <div id="contactsError" class="error" style="display:none"></div>
+      </div>
+    </div>
+  </section>
+
 
   <footer class="site-footer">
     Built with 💜 from Maya & Sean.
