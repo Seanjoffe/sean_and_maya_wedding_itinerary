@@ -275,3 +275,106 @@ img, picture, video, canvas { display:block; max-width:100%; }
   .pill { font-size: 15px; padding: 9px 14px; }
   .site-tab { padding: 7px 10px; }
 }
+
+/* ===================================================================
+   EXPLORE TAB (chips + toolbar) — minimal additions
+   =================================================================== */
+
+/* Optional toolbar row above the grid (IDs used so this works even if buttons don’t have .btn) */
+#exploreToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+/* Search input */
+#exploreSearch {
+  appearance: none;
+  width: 100%;
+  max-width: 420px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--ring);
+  background: #fff;
+  color: #0f172a;
+}
+#exploreSearch::placeholder { color: #94a3b8; }
+#exploreSearch:focus-visible { outline: 2px solid #93c5fd; outline-offset: 2px; }
+
+/* In dark mode, make the input match surfaces */
+@media (prefers-color-scheme: dark) {
+  #exploreSearch {
+    background: #0f172a;
+    color: #e5e7eb;
+    border-color: #22314a;
+  }
+  #exploreSearch::placeholder { color: #94a3b8; }
+}
+
+/* Count text */
+#exploreCount { color: var(--muted); font-size: 14px; }
+
+/* Chips container rows */
+#chipCategories, #chipSubcategories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 0;
+}
+
+/* Filter chip (toggle via aria-pressed) */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(15,23,42,.15);
+  background: rgba(255,255,255,.95);
+  color: #0f172a;
+  cursor: pointer;
+  user-select: none;
+  transition: filter .15s ease, background-color .15s ease, border-color .15s ease;
+}
+.chip:hover { filter: brightness(0.98); }
+.chip:active { transform: translateY(0.5px); }
+.chip[aria-pressed="true"] {
+  background: #dbeafe;
+  border-color: #bfdbfe;
+}
+
+/* Dark mode chip treatment */
+@media (prefers-color-scheme: dark) {
+  .chip {
+    background: rgba(15,23,42,.65);
+    border-color: rgba(148,163,184,.25);
+    color: #e5e7eb;
+  }
+  .chip[aria-pressed="true"] {
+    background: rgba(191,224,255,.22);
+    border-color: rgba(191,224,255,.38);
+    color: #eff6ff;
+  }
+}
+
+/* Make Sort/Clear look good even if they don’t have .btn */
+#exploreSortAZ, #exploreClear {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid #bfdbfe;
+  background: #dbeafe;
+  color: #0f172a;
+  cursor: pointer;
+}
+#exploreSortAZ[aria-pressed="true"] {
+  filter: brightness(0.97);
+  border-color: #93c5fd;
+}
+
+/* Tighten on very small screens */
+@media (max-width: 360px) {
+  .chip { font-size: 11px; padding: 6px 10px; }
+}
