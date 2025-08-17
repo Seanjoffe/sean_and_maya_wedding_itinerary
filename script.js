@@ -5,8 +5,9 @@ const COUPLE = {
   weddingDateISO: '2025-08-31',
   venueMap: 'https://maps.app.goo.gl/njqM2sQ83jtwhUE38'
 };
-const CSV_LOCAL_PATH   = '/wedding_week_itinerary.csv'; // itinerary data
-const CSV_EXPLORE_PATH = '/wedding_week_explore.csv';   // explore data
+const CSV_LOCAL_PATH    = '/wedding_week_itinerary.csv'; // itinerary data
+const CSV_EXPLORE_PATH  = '/wedding_week_explore.csv';   // explore data
+const CSV_CONTACTS_PATH = '/wedding_week_contacts.csv';  // contacts & emergency data
 
 // ================= UTILITIES =================
 function fmtDate(iso){ try { return new Date(iso).toLocaleDateString(); } catch { return iso; } }
@@ -39,16 +40,22 @@ function splitCSVLine(line){
   out.push(cur); return out;
 }
 
+// Minimal phone helpers for Contacts
+function telLink(phone){ return 'tel:' + String(phone || '').replace(/\s+/g,''); }
+function waLink(phone){
+  const digits = String(phone || '').replace(/[^\d]/g,'');
+  return digits ? ('https://wa.me/' + digits) : '';
+}
+
 // ================= CSV PARSING (ITINERARY) =================
 function parseCSV(text){
   if (!text) return [];
-  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);             // strip BOM
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1); // strip BOM
   const lines = text.split(/\r?\n/);
   while(lines.length && !lines[lines.length-1].trim()) lines.pop();     // trim trailing blanks
   if (!lines.length) return [];
 
   const headerCells = splitCSVLine(lines[0]).map(h => h.trim());
-
   const rows = lines.slice(1).map(line => {
     const cells = splitCSVLine(line).map(s => s.replace(/^"|"$/g,'').trim());
     const obj = {}; headerCells.forEach((h,i)=> obj[h] = (cells[i] ?? ''));
@@ -119,7 +126,6 @@ function activityCard(item, dateISO){
   const card = document.createElement('div');
   card.className = 'card';
 
-  // Add a category class so CSS can theme per type later if desired
   const variant = categoryVariant(item.category);
   card.classList.add('card--' + variant);
   card.dataset.category = variant;
@@ -426,7 +432,196 @@ async function ensureExploreLoaded(){
   }
 }
 
-// ================= Simple router (Home / Calendar / Explore) =================
+// ================= CONTACTS: parsing, state, rendering =================
+function parseCSVContacts(text){
+  if (!text) return [];
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+  const lines = text.split(/\r?\n/).filter(l => l.trim().length);
+  if (!lines.length) return [];
+
+  const headers = splitCSVLine(lines[0]).map(h => h.trim());
+  const idx = (name) => headers.findIndex(h => h.toLowerCase() === name.toLowerCase());
+  const iName = idx('Name'),
+        iCat  = idx('Category'),
+        iTel  = idx('Phone'),
+        iNote = idx('Notes'),
+        iLink = idx('Website/Link');
+
+  return lines.slice(1).map(line => {
+    const cells = splitCSVLine(line).map(s => s.replace(/^"|"$/g,'').trim());
+    return {
+      name: (cells[iName] ?? ''),
+      category: (cells[iCat] ?? ''),
+      phone: (cells[iTel] ?? ''),
+      notes: (cells[iNote] ?? ''),
+      link: (cells[iLink] ?? '')
+    };
+  });
+}
+
+const CONTACTS = {
+  loaded: false,
+  all: [],
+  contacts: [],   // Category = "Contacts"
+  emergency: []   // Category = "Emergency"
+};
+
+function renderContactsTable(){
+  const tbody = document.querySelector('#contactsTable tbody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  CONTACTS.contacts.forEach(c => {
+    const tr = document.createElement('tr');
+
+    const tdName = document.createElement('td');
+    tdName.style.padding = '10px 12px';
+    tdName.textContent = c.name || '';
+    tdName.dataset.label = 'Name';
+
+    const tdPhone = document.createElement('td');
+    tdPhone.style.padding = '10px 12px';
+    tdPhone.dataset.label = 'Phone';
+    if (c.phone) {
+      const a = document.createElement('a');
+      a.href = telLink(c.phone);
+      a.textContent = c.phone;
+      a.rel = 'noreferrer';
+      tdPhone.appendChild(a);
+    }
+
+    const tdNotes = document.createElement('td');
+    tdNotes.style.padding = '10px 12px';
+    tdNotes.textContent = c.notes || '';
+    tdNotes.dataset.label = 'Notes';
+
+    const tdActions = document.createElement('td');
+    tdActions.style.padding = '10px 12px';
+    tdActions.style.display = 'flex';
+    tdActions.style.gap = '8px';
+    tdActions.style.flexWrap = 'nowrap'; // keep on one line
+    tdActions.dataset.label = 'Actions';
+
+    if (c.phone) {
+      const call = document.createElement('a');
+      call.className = 'btn';
+      call.href = telLink(c.phone);
+      call.textContent = '📞 Call';
+      call.rel = 'noreferrer';
+      call.style.padding = '6px 10px';
+      call.style.width = 'auto';        // override global .btn width:100%
+      tdActions.appendChild(call);
+
+      const waUrl = waLink(c.phone);
+      if (waUrl) {
+        const wa = document.createElement('a');
+        wa.className = 'btn';
+        wa.href = waUrl;
+        wa.target = '_blank';
+        wa.rel = 'noreferrer';
+        wa.textContent = '💬 WhatsApp';
+        wa.style.padding = '6px 10px';
+        wa.style.width = 'auto';        // override global .btn width:100%
+        tdActions.appendChild(wa);
+      }
+    }
+
+    tr.appendChild(tdName);
+    tr.appendChild(tdPhone);
+    tr.appendChild(tdNotes);
+    tr.appendChild(tdActions);
+
+    tbody.appendChild(tr);
+  });
+}
+
+function renderEmergencyList(){
+  const ul = document.getElementById('emergencyList');
+  if (!ul) return;
+  ul.innerHTML = '';
+
+  CONTACTS.emergency.forEach(e => {
+    const li = document.createElement('li');
+    li.style.margin = '6px 0';
+
+    const name = document.createElement('span');
+    name.style.fontWeight = '600';
+    name.textContent = e.name || '';
+
+    li.appendChild(name);
+
+    if (e.phone) {
+      const sep = document.createElement('span');
+      sep.textContent = ' — ';
+      const phone = document.createElement('a');
+      phone.href = telLink(e.phone);
+      phone.rel = 'noreferrer';
+      phone.textContent = e.phone || '';
+      li.appendChild(sep);
+      li.appendChild(phone);
+    }
+
+    if (e.notes) {
+      const notes = document.createElement('span');
+      notes.className = 'muted';
+      notes.style.marginLeft = '6px';
+      notes.textContent = `(${e.notes})`;
+      li.appendChild(notes);
+    }
+
+    ul.appendChild(li);
+  });
+}
+
+function wireSirenLinks(){
+  // Use Category === 'Siren' from CSV and map to three anchors
+  const sirenRows = CONTACTS.all.filter(r =>
+    (r.category || '').trim().toLowerCase() === 'siren' && r.link
+  );
+
+  const norm = s => String(s||'').toLowerCase().replace(/\s+/g,'');
+  const mapByNorm = Object.fromEntries(sirenRows.map(r => [norm(r.name), r.link]));
+
+  const aHfc = document.getElementById('linkHFC');         // Home Front Command
+  const aRed = document.getElementById('linkRedAlert');    // Red Alert: Israel
+  const aShl = document.getElementById('linkShelterMap');  // Interactive TLV Shelter Map
+
+  if (aHfc) aHfc.href = mapByNorm['homefrontcommand'] || mapByNorm['homefront'] || aHfc.href || '#';
+  if (aRed) aRed.href = mapByNorm['redalert'] || aRed.href || '#';
+  if (aShl) aShl.href = mapByNorm['interactivetelavivsheltermap'] || mapByNorm['telavivsheltermap'] || mapByNorm['sheltermap'] || aShl.href || '#';
+}
+
+function renderContactsView(){
+  renderContactsTable();   // desktop table; mobile stacked via CSS
+  renderEmergencyList();
+  wireSirenLinks();
+  document.querySelector('#contacts')?.setAttribute('aria-busy','false');
+}
+
+async function ensureContactsLoaded(){
+  if (CONTACTS.loaded) { renderContactsView(); return; }
+
+  try {
+    const res = await fetch(CSV_CONTACTS_PATH + '?cb=' + Date.now());
+    if (!res.ok) throw new Error('CONTACTS CSV HTTP ' + res.status);
+    const text = await res.text();
+    const rows = parseCSVContacts(text);
+
+    CONTACTS.all = rows.slice();
+    CONTACTS.contacts  = rows.filter(r => (r.category || '').toLowerCase() === 'contacts');
+    CONTACTS.emergency = rows.filter(r => (r.category || '').toLowerCase() === 'emergency');
+
+    CONTACTS.loaded = true;
+    renderContactsView();
+  } catch (err) {
+    console.error('Contacts CSV load failed:', err);
+    const el = document.getElementById('contactsError');
+    if (el) { el.style.display = 'block'; el.textContent = 'Could not load Contacts data.'; }
+    document.querySelector('#contacts')?.setAttribute('aria-busy','false');
+  }
+}
+
+// ================= Simple router (Home / Calendar / Explore / Contacts) =================
 function setActiveTab(view) {
   document.querySelectorAll('.site-tab').forEach(a => {
     a.setAttribute('aria-selected', a.dataset.view === view ? 'true' : 'false');
@@ -456,14 +651,16 @@ async function load(){
     const days = parseCSV(text);
     if (!days.length) {
       const el = document.getElementById('error');
-      el.style.display = 'block';
-      el.innerHTML = 'No rows found after parsing the CSV.';
+      if (el) {
+        el.style.display = 'block';
+        el.innerHTML = 'No rows found after parsing the CSV.';
+      }
     }
 
-    // ---------- Router (clean URLs: /home, /calendar, /explore) ----------
+    // ---------- Router (clean URLs: /home, /calendar, /explore, /contacts) ----------
     function currentViewFromPath() {
       const seg = location.pathname.replace(/\/+$/, '').split('/').pop();
-      return (seg === 'calendar' || seg === 'home' || seg === 'explore') ? seg : 'home';
+      return (seg === 'calendar' || seg === 'home' || seg === 'explore' || seg === 'contacts') ? seg : 'home';
     }
 
     function performRoute() {
@@ -471,7 +668,7 @@ async function load(){
       showView(view);
       if (view === 'calendar') renderCalendarAll(days);
       if (view === 'explore') ensureExploreLoaded();
-      // reflect active tab
+      if (view === 'contacts') ensureContactsLoaded();
       document.querySelectorAll('.site-tab').forEach(a =>
         a.setAttribute('aria-selected', a.dataset.view === view ? 'true' : 'false')
       );
@@ -481,6 +678,7 @@ async function load(){
       let path = '/home';
       if (view === 'calendar') path = '/calendar';
       else if (view === 'explore') path = '/explore';
+      else if (view === 'contacts') path = '/contacts';
       history.pushState({ view }, '', path);
       performRoute();
     }
@@ -508,21 +706,24 @@ async function load(){
     }
     document.querySelector('#calendar')?.setAttribute('aria-busy','false');
 
-    // Router still needs to work for Explore even if itinerary fails
+    // Router still needs to work for Explore/Contacts even if itinerary fails
     function currentViewFromPath() {
       const seg = location.pathname.replace(/\/+$/, '').split('/').pop();
-      return (seg === 'explore') ? 'explore' : 'home';
+      return (seg === 'explore' || seg === 'contacts' || seg === 'home') ? seg : 'home';
     }
     function performRoute() {
       const view = currentViewFromPath();
       showView(view);
       if (view === 'explore') ensureExploreLoaded();
+      if (view === 'contacts') ensureContactsLoaded();
       document.querySelectorAll('.site-tab').forEach(a =>
         a.setAttribute('aria-selected', a.dataset.view === view ? 'true' : 'false')
       );
     }
     function navigate(view) {
-      const path = view === 'explore' ? '/explore' : '/home';
+      let path = '/home';
+      if (view === 'explore') path = '/explore';
+      else if (view === 'contacts') path = '/contacts';
       history.pushState({ view }, '', path);
       performRoute();
     }
