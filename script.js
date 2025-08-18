@@ -52,7 +52,7 @@ function parseCSV(text){
   if (!text) return [];
   if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1); // strip BOM
   const lines = text.split(/\r?\n/);
-  while(lines.length && !lines[lines.length-1].trim()) lines.pop();
+  while(lines.length && !lines[lines.length-1].trim()) lines.pop();     // trim trailing blanks
   if (!lines.length) return [];
 
   const headerCells = splitCSVLine(lines[0]).map(h => h.trim());
@@ -247,7 +247,7 @@ function renderCalendarAll(days){
 function parseCSVExplore(text){
   if (!text) return [];
   if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-  const lines = text.split(/\r?\n/).filter(l => l.trim().length);
+  const lines = text split(/\r?\n/).filter(l => l.trim().length);
   if (!lines.length) return [];
   const headers = splitCSVLine(lines[0]).map(h => h.trim());
   const idx = (name) => headers.findIndex(h => h.toLowerCase() === name.toLowerCase());
@@ -466,13 +466,6 @@ const CONTACTS = {
   emergency: []   // Category = "Emergency"
 };
 
-// WhatsApp inline SVG (brand green)
-const WA_SVG = `
-<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-  <circle cx="12" cy="12" r="10" fill="#25D366"/>
-  <path fill="#fff" d="M16.6 13.9c-.2-.1-1.3-.6-1.5-.7-.2-.1-.4-.1-.6.1s-.7.8-.9 1c-.1.1-.3.1-.5 0-1-.5-3.2-2.4-3.7-3.3-.1-.2 0-.4.1-.5l.6-.6c.1-.1.1-.3.1-.5s-.5-1.3-.7-1.8c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-1 1-1 2.4 0 1.4 1 2.8 1.1 3 .1.2 2 3.2 4.9 4.5.7.3 1.3.5 1.7.6.7.2 1.3.2 1.8.1.6-.1 1.3-.6 1.5-1.1.2-.5.2-1 .2-1.1 0-.1-.2-.1-.4-.2z"/>
-</svg>`;
-
 function renderContactsTable(){
   const tbody = document.querySelector('#contactsTable tbody');
   if (!tbody) return;
@@ -481,7 +474,7 @@ function renderContactsTable(){
   CONTACTS.contacts.forEach(c => {
     const tr = document.createElement('tr');
 
-    // Name (split first/last for mobile stacking)
+    // Name (split first/last so it can stack on mobile)
     const tdName = document.createElement('td');
     tdName.style.padding = '10px 12px';
     tdName.dataset.label = 'Name';
@@ -515,7 +508,7 @@ function renderContactsTable(){
     tdNotes.textContent = c.notes || '';
     tdNotes.dataset.label = 'Notes';
 
-    // Actions
+    // Actions (icon-only to save space)
     const tdActions = document.createElement('td');
     tdActions.style.padding = '10px 12px';
     tdActions.style.display = 'flex';
@@ -524,26 +517,35 @@ function renderContactsTable(){
     tdActions.dataset.label = 'Actions';
 
     if (c.phone) {
+      // Call
       const call = document.createElement('a');
-      call.className = 'btn btn--call';
+      call.className = 'btn icon';
       call.href = telLink(c.phone);
-      call.setAttribute('aria-label', `Call ${c.name || 'contact'}`);
-      call.innerHTML = `<span class="icon" aria-hidden="true">📞</span><span class="label">Call</span>`;
-      call.style.padding = '6px 10px';
-      call.style.width = 'auto';
+      call.rel = 'noreferrer';
+      call.setAttribute('aria-label', `Call ${c.name}`);
+      call.innerHTML = `
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+          <path fill="currentColor" d="M6.62 10.79a15.05 15.05 0 006.59 6.59l1.82-1.82a1 1 0 011.01-.24c1.1.36 2.29.56 3.51.56a1 1 0 011 1v2.98a1 1 0 01-1 1A17 17 0 013 5a1 1 0 011-1h2.99a1 1 0 011 1c0 1.22.2 2.41.56 3.51a1 1 0 01-.24 1.01l-1.69 1.27z"/>
+        </svg>`;
       tdActions.appendChild(call);
 
+      // WhatsApp (logo image; ensure /assets/whatsapp.svg exists)
       const waUrl = waLink(c.phone);
       if (waUrl) {
         const wa = document.createElement('a');
-        wa.className = 'btn btn--wa';
+        wa.className = 'btn icon';
         wa.href = waUrl;
         wa.target = '_blank';
         wa.rel = 'noreferrer';
-        wa.setAttribute('aria-label', `WhatsApp ${c.name || 'contact'}`);
-        wa.innerHTML = `<span class="icon" aria-hidden="true">${WA_SVG}</span><span class="label">WhatsApp</span>`;
-        wa.style.padding = '6px 10px';
-        wa.style.width = 'auto';
+        wa.setAttribute('aria-label', `WhatsApp ${c.name}`);
+        const img = document.createElement('img');
+        img.src = '/assets/whatsapp.svg';
+        img.alt = '';
+        img.width = 22;
+        img.height = 22;
+        img.decoding = 'async';
+        img.loading = 'lazy';
+        wa.appendChild(img);
         tdActions.appendChild(wa);
       }
     }
@@ -596,6 +598,7 @@ function renderEmergencyList(){
 }
 
 function wireSirenLinks(){
+  // Use Category === 'Siren' from CSV and map to three anchors
   const sirenRows = CONTACTS.all.filter(r =>
     (r.category || '').trim().toLowerCase() === 'siren' && r.link
   );
@@ -603,9 +606,9 @@ function wireSirenLinks(){
   const norm = s => String(s||'').toLowerCase().replace(/\s+/g,'');
   const mapByNorm = Object.fromEntries(sirenRows.map(r => [norm(r.name), r.link]));
 
-  const aHfc = document.getElementById('linkHFC');
-  const aRed = document.getElementById('linkRedAlert');
-  const aShl = document.getElementById('linkShelterMap');
+  const aHfc = document.getElementById('linkHFC');         // Home Front Command
+  const aRed = document.getElementById('linkRedAlert');    // Red Alert: Israel
+  const aShl = document.getElementById('linkShelterMap');  // Interactive TLV Shelter Map
 
   if (aHfc) aHfc.href = mapByNorm['homefrontcommand'] || mapByNorm['homefront'] || aHfc.href || '#';
   if (aRed) aRed.href = mapByNorm['redalert'] || aRed.href || '#';
@@ -613,7 +616,7 @@ function wireSirenLinks(){
 }
 
 function renderContactsView(){
-  renderContactsTable();
+  renderContactsTable();   // desktop table; mobile compact via CSS
   renderEmergencyList();
   wireSirenLinks();
   document.querySelector('#contacts')?.setAttribute('aria-busy','false');
@@ -668,6 +671,7 @@ async function load(){
     if (!res.ok) throw new Error('CSV HTTP ' + res.status + ' for ' + url);
     const text = await res.text();
 
+    // Parse CSV → days
     const days = parseCSV(text);
     if (!days.length) {
       const el = document.getElementById('error');
