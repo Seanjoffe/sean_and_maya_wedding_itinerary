@@ -370,6 +370,10 @@ img, picture, video, canvas { display:block; max-width:100%; }
    CONTACTS TAB (table + emergency list + siren guidance)
    =================================================================== */
 
+/* Name pieces default inline (desktop) */
+.name-first,
+.name-last { display: inline; }
+
 /* Contacts table (desktop default) */
 #contactsTable {
   width: 100%;
@@ -470,64 +474,58 @@ img, picture, video, canvas { display:block; max-width:100%; }
   white-space: nowrap; border: 0;
 }
 
-/* =======================
-   MOBILE CONTACTS (≤640px)
-   Compact & no sideways scroll
-   ======================= */
-@media (max-width: 640px) {
-  /* Let the table shrink on small screens */
-  #contactsTable { min-width: 0; }
-
-  /* Hide the Phone column (2nd col) in both header & body */
-  #contactsTable th:nth-child(2),
-  #contactsTable td:nth-child(2) { display: none; }
-
-  /* Tighter paddings */
-  #contactsTable thead th { padding: 10px 8px; }
-  #contactsTable tbody td { padding: 8px 8px; }
-
-  /* Actions: even tighter gap to feel compact */
-  #contactsTable tbody td[data-label="Actions"] { gap: 8px; }
-
-  /* Keep header visible (shows Name, Notes, Actions only) */
-}
-
-
 /* ============================================
-   CONTACTS TABLE — Mobile overflow + compaction
+   CONTACTS — Mobile (≤640px): compact + no overflow
    ============================================ */
 @media (max-width: 640px) {
-  /* Let the table shrink and wrap on small screens */
+  /* Let the table actually shrink */
   #contactsTable {
-    min-width: 0;          /* override the base 520px */
+    min-width: 0;
     width: 100%;
-    table-layout: fixed;   /* distribute width and allow wrapping */
+    table-layout: fixed; /* predictable column widths */
   }
 
-  /* Allow cells to wrap instead of forcing width */
-  #contactsTable th,
-  #contactsTable td {
+  /* Hide the Phone column (2nd col) in header & body */
+  #contactsTable th:nth-child(2),
+  #contactsTable td:nth-child(2) {
+    display: none;
+  }
+
+  /* General tightening and allow wrapping where it helps */
+  #contactsTable thead th,
+  #contactsTable tbody td {
+    padding: 8px 8px;
     white-space: normal;
     overflow-wrap: anywhere;
     word-break: break-word;
-    padding: 8px 10px;     /* slightly tighter padding for compact rows */
   }
 
-  /* Keep action buttons inline and compact */
-  #contactsTable td:nth-child(3) a.btn {
+  /* Column widths for visible columns after Phone is hidden:
+     1 = Name, 3 = Notes, 4 = Actions */
+  #contactsTable th:nth-child(1),
+  #contactsTable td:nth-child(1) { width: 44%; } /* Name */
+  #contactsTable th:nth-child(3),
+  #contactsTable td:nth-child(3) { width: 36%; } /* Notes */
+  #contactsTable th:nth-child(4),
+  #contactsTable td:nth-child(4) { width: 20%; } /* Actions */
+
+  /* Keep the Actions cell on one line so buttons don't stack vertically */
+  #contactsTable td[data-label="Actions"] {
+    white-space: nowrap;
+  }
+  #contactsTable td[data-label="Actions"] .btn {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    width: auto;
-    padding: 6px 8px;
+    width: auto;          /* override global .btn width */
+    padding: 6px 8px;     /* compact buttons */
   }
 
-  /* Optional: gentle column widths to balance the row */
-  #contactsTable th:nth-child(1),
-  #contactsTable td:nth-child(1) { width: 40%; } /* Name */
-  #contactsTable th:nth-child(2),
-  #contactsTable td:nth-child(2) { width: 35%; } /* Notes */
-  #contactsTable th:nth-child(3),
-  #contactsTable td:nth-child(3) { width: 25%; } /* Actions */
+  /* Stack first/last name on mobile for more room */
+  .name-first, .name-last {
+    display: block;
+    line-height: 1.2;
+  }
 }
+
 
