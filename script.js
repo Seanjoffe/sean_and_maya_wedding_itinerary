@@ -247,7 +247,7 @@ function renderCalendarAll(days){
 function parseCSVExplore(text){
   if (!text) return [];
   if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-  const lines = text split(/\r?\n/).filter(l => l.trim().length);
+  const lines = text.split(/\r?\n/).filter(l => l.trim().length); // <-- fixed missing dot bug
   if (!lines.length) return [];
   const headers = splitCSVLine(lines[0]).map(h => h.trim());
   const idx = (name) => headers.findIndex(h => h.toLowerCase() === name.toLowerCase());
@@ -508,12 +508,13 @@ function renderContactsTable(){
     tdNotes.textContent = c.notes || '';
     tdNotes.dataset.label = 'Notes';
 
-    // Actions (icon-only to save space)
+    // Actions (icon-only)
     const tdActions = document.createElement('td');
     tdActions.style.padding = '10px 12px';
     tdActions.style.display = 'flex';
     tdActions.style.gap = '8px';
     tdActions.style.flexWrap = 'nowrap';
+    tdActions.style.justifyContent = 'flex-end';
     tdActions.dataset.label = 'Actions';
 
     if (c.phone) {
@@ -529,7 +530,7 @@ function renderContactsTable(){
         </svg>`;
       tdActions.appendChild(call);
 
-      // WhatsApp (logo image; ensure /assets/whatsapp.svg exists)
+      // WhatsApp (logo image; expects /assets/whatsapp.svg; graceful fallback)
       const waUrl = waLink(c.phone);
       if (waUrl) {
         const wa = document.createElement('a');
@@ -541,10 +542,8 @@ function renderContactsTable(){
         const img = document.createElement('img');
         img.src = '/assets/whatsapp.svg';
         img.alt = '';
-        img.width = 22;
-        img.height = 22;
-        img.decoding = 'async';
-        img.loading = 'lazy';
+        img.width = 22; img.height = 22; img.decoding = 'async'; img.loading = 'lazy';
+        img.onerror = () => { wa.textContent = 'WA'; };
         wa.appendChild(img);
         tdActions.appendChild(wa);
       }
