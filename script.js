@@ -476,8 +476,24 @@ function renderContactsTable(){
 
     const tdName = document.createElement('td');
     tdName.style.padding = '10px 12px';
-    tdName.textContent = c.name || '';
     tdName.dataset.label = 'Name';
+    
+    // Split the last word as "last name"; the rest as "first"
+    const parts = String(c.name || '').trim().split(/\s+/);
+    const last  = parts.length > 1 ? parts.pop() : '';
+    const first = parts.join(' ') || (c.name || '');
+    
+    // Build spans to allow mobile stacking via CSS
+    const spanFirst = document.createElement('span');
+    spanFirst.className = 'name-first';
+    spanFirst.textContent = first;
+    
+    const spanLast = document.createElement('span');
+    spanLast.className = 'name-last';
+    if (last) { spanLast.textContent = last; }
+    
+    tdName.appendChild(spanFirst);
+    if (last) tdName.appendChild(spanLast);
 
     const tdPhone = document.createElement('td');
     tdPhone.style.padding = '10px 12px';
