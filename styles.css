@@ -485,39 +485,17 @@ img, picture, video, canvas { display:block; max-width:100%; }
 }
 
 /* ============================================
-   CONTACTS — Mobile (≤640px): compact, no overflow
+   CONTACTS — Mobile (≤640px): compact, Name+Notes auto-fit, Actions gets leftover
    ============================================ */
 @media (max-width: 640px) {
-  /* Let the table actually shrink and size by content */
   #contactsTable {
-    min-width: 0;
+    min-width: 0;         /* allow shrinking */
     width: 100%;
-    table-layout: auto;
+    table-layout: auto;   /* size by content */
   }
 
-  /* Hide the Phone column (2nd col) in header & body */
+  /* Hide the Phone column (2nd col) */
   #contactsTable th:nth-child(2),
   #contactsTable td:nth-child(2) { display: none; }
 
-  /* General tightening and allow wrapping */
-  #contactsTable thead th,
-  #contactsTable tbody td {
-    padding: 8px 8px;
-    white-space: normal;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-  }
-
-  /* Bias the Name column to shrink-to-fit; Notes gets remaining space */
-  #contactsTable th:nth-child(1),
-  #contactsTable td:nth-child(1) { width: 1%; }
-
-  /* Keep Actions narrow and on one line */
-  #contactsTable th:nth-child(4),
-  #contactsTable td:nth-child(4) { width: 96px; }
-  #contactsTable td[data-label="Actions"] { white-space: nowrap; }
-  #contactsTable td[data-label="Actions"] .btn { padding: 6px 8px; }
-
-  /* Stack first/last name on mobile for more room */
-  .name-first, .name-last { display: block; line-height: 1.2; }
-}
+  /* General tightening */
