@@ -217,6 +217,7 @@ function activityCard(item, dateISO){
 // ================= RENDER: all days stacked =================
 function renderCalendarAll(days){
   const wrap = document.getElementById('calendarDays');
+  if (!wrap) return;
   wrap.innerHTML = '';
   days.forEach(d => {
     const group = document.createElement('section');
@@ -247,7 +248,7 @@ function renderCalendarAll(days){
 function parseCSVExplore(text){
   if (!text) return [];
   if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-  const lines = text.split(/\r?\n/).filter(l => l.trim().length); // <-- fixed missing dot bug
+  const lines = text.split(/\r?\n/).filter(l => l.trim().length);
   if (!lines.length) return [];
   const headers = splitCSVLine(lines[0]).map(h => h.trim());
   const idx = (name) => headers.findIndex(h => h.toLowerCase() === name.toLowerCase());
@@ -514,7 +515,8 @@ function renderContactsTable(){
     tdActions.style.display = 'flex';
     tdActions.style.gap = '8px';
     tdActions.style.flexWrap = 'nowrap';
-    tdActions.style.justifyContent = 'flex-end';
+    tdActions.style.whiteSpace = 'nowrap';         // keep icons on one line
+    tdActions.style.justifyContent = 'flex-end';   // align to right edge
     tdActions.dataset.label = 'Actions';
 
     if (c.phone) {
@@ -525,12 +527,12 @@ function renderContactsTable(){
       call.rel = 'noreferrer';
       call.setAttribute('aria-label', `Call ${c.name}`);
       call.innerHTML = `
-        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+        <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false">
           <path fill="currentColor" d="M6.62 10.79a15.05 15.05 0 006.59 6.59l1.82-1.82a1 1 0 011.01-.24c1.1.36 2.29.56 3.51.56a1 1 0 011 1v2.98a1 1 0 01-1 1A17 17 0 013 5a1 1 0 011-1h2.99a1 1 0 011 1c0 1.22.2 2.41.56 3.51a1 1 0 01-.24 1.01l-1.69 1.27z"/>
         </svg>`;
       tdActions.appendChild(call);
 
-      // WhatsApp (logo image; expects /assets/whatsapp.svg; graceful fallback)
+      // WhatsApp (logo image; relative path; graceful fallback)
       const waUrl = waLink(c.phone);
       if (waUrl) {
         const wa = document.createElement('a');
@@ -540,9 +542,9 @@ function renderContactsTable(){
         wa.rel = 'noreferrer';
         wa.setAttribute('aria-label', `WhatsApp ${c.name}`);
         const img = document.createElement('img');
-        img.src = '/assets/whatsapp.svg';
+        img.src = 'assets/whatsapp.svg'; // relative path to avoid subpath 404s
         img.alt = '';
-        img.width = 22; img.height = 22; img.decoding = 'async'; img.loading = 'lazy';
+        img.width = 24; img.height = 24; img.decoding = 'async'; img.loading = 'lazy';
         img.onerror = () => { wa.textContent = 'WA'; };
         wa.appendChild(img);
         tdActions.appendChild(wa);
