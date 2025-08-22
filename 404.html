@@ -48,29 +48,38 @@
         </p>
       </header>
 
-      <!-- Couple photo -->
-      <figure class="hero-photo">
-        <img
-          src="/assets/landing_page_staring_at_each_other.jpeg"
-          alt="Sean and Maya"
-          width="1600" height="1067"
-          fetchpriority="high"
-          decoding="async"
-        />
-      </figure>
+      <div class="grid">
+        <div class="card">
+          <h2 class="section-title">Welcome!</h2>
+          <p>We're so excited to celebrate with you. Find key info, events, and places to explore during the week.</p>
+          <ul class="bullets">
+            <li>Tap <strong>Calendar</strong> to see the full itinerary.</li>
+            <li>Use <strong>Explore</strong> for cafes, bars, and restaurants near the venues.</li>
+            <li>In <strong>Contacts</strong>, reach important people and local emergency numbers.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3 class="day-heading">Key Links</h3>
+          <div class="btns">
+            <a class="btn" id="addAllToCalendar" href="#" role="button">Add all events to my calendar</a>
+            <a class="btn" id="downloadICS" href="#" role="button">Download .ics</a>
+          </div>
+        </div>
+
+        <div id="error" class="error" style="display:none"></div>
+      </div>
     </div>
   </section>
 
-  <!-- ===== CALENDAR VIEW (all days stacked in one scroll) ===== -->
+  <!-- ===== CALENDAR VIEW ===== -->
   <section id="calendar" class="view hidden" aria-live="polite" aria-busy="true">
     <div class="container">
-      <h2 class="section-title">Itinerary</h2>
-      <p class="muted">Scroll through each day. Tap a button to open maps or save to your calendar.</p>
-
-      <!-- All days render here -->
-      <div id="calendarDays"></div>
-
-      <div id="error" class="error" style="display:none"></div>
+      <h2 class="section-title">Calendar</h2>
+      <div id="calendarList">
+        <!-- populated by script.js -->
+      </div>
+      <div id="calendarError" class="error" style="display:none"></div>
     </div>
   </section>
 
@@ -84,7 +93,7 @@
       <div class="grid" style="margin-top:8px">
         <div role="search" class="row" style="gap:10px">
           <input id="exploreSearch" type="search" placeholder="Search by name or address" aria-label="Search places"
-                 style="padding:10px 12px; border-radius:12px; border:1px solid rgba(15,23,42,.15); width:100%; background:var(--surface); color:var(--text);" />
+                 style="padding:10px 12px; border-radius:12px; border: 1px solid var(--ring); width:100%; background:var(--surface); color:var(--text);" />
           <div class="btns" style="margin:0">
             <button id="exploreSortAZ" class="btn" type="button" aria-pressed="false">Sort A–Z</button>
             <button id="exploreClear" class="btn" type="button">Clear filters</button>
@@ -102,12 +111,9 @@
         </div>
       </div>
 
-      <!-- Result count -->
-      <p class="muted" style="margin:12px 0 0"><span id="exploreCount">0 places</span></p>
-
-      <!-- Results grid -->
-      <div id="exploreGrid" class="grid" style="margin-top:10px"></div>
-
+      <div id="exploreList" class="grid" style="margin-top:12px">
+        <!-- populated by script.js -->
+      </div>
       <div id="exploreError" class="error" style="display:none"></div>
     </div>
   </section>
@@ -121,6 +127,12 @@
       <!-- Important contacts (desktop table; mobile compact via CSS) -->
       <div class="card" style="padding:0">
         <table id="contactsTable" aria-describedby="contactsHelp" style="width:100%; border-collapse:collapse">
+          <colgroup>
+            <col class="col-name" />
+            <col class="col-phone" />
+            <col class="col-notes" />
+            <col class="col-actions" />
+          </colgroup>
           <thead>
             <tr>
               <th scope="col" style="text-align:left; padding:12px">Name</th>
@@ -147,7 +159,7 @@
         <h3 class="day-heading">In Case a Siren Sounds</h3>
         <div class="card">
           <div id="sirenBlock" class="muted">
-            <p>Sirens are very uncommon these days, and when they do happen it’s usually rockets fired from Yemen, and these are very likely to be intercepted before reaching Israel. Still, just in case, here’s what to do:</p>
+            <p>Sirens are very uncommon these days, and when they do happen, the vast majority of rockets are intercepted before reaching Israel. Still, just in case, here’s what to do:</p>
             <p><strong>Safest Places (in order of preference):</strong></p>
             <ul>
               <li>Your Mamad (protected room at home) — reinforced and safest.</li>
@@ -158,18 +170,17 @@
               <li>A public shelter — like an opened communal shelter or underground station.</li>
             </ul>
             <p><strong>If you’re outside:</strong> Enter the nearest building. If you can’t, lie down and protect your head.</p>
-            <p><strong>If you’re in a car:</strong> Pull over, get out, and move to a safe place. If you can’t, lie down beside the car and cover your head.</p>
+            <p><strong>If you’re in a car:</strong> Pull over, get out, and move to the closest shelter or stairwell. If you can’t, lie down beside the car and cover your head.</p>
             <p>Stay inside for at least 10 minutes, or until officials say it’s safe.</p>
 
             <h4 class="day-heading" style="margin-top:12px">Stay Connected &amp; Prepared</h4>
             <p>Download these apps for real-time alerts:</p>
             <ul>
-              <li><a id="linkHFC" href="#" target="_blank" rel="noreferrer">Home Front Command (official)</a></li>
-              <li><a id="linkRedAlert" href="#" target="_blank" rel="noreferrer">Red Alert: Israel (fast notifications)</a></li>
+              <li><a href="https://apps.apple.com/us/app/redalert-ארגון-ידידים/id742658064" target="_blank" rel="noreferrer noopener">RedAlert (iOS)</a></li>
+              <li><a href="https://play.google.com/store/apps/details?id=com.ushareit.redalert&hl=en_US" target="_blank" rel="noreferrer noopener">RedAlert (Android)</a></li>
+              <li><a href="https://www.tzevaadom.org" target="_blank" rel="noreferrer noopener">Official Guidance (Hebrew)</a></li>
             </ul>
-            <p>Check this map to find your closest shelter in Tel Aviv:<br>
-              <a id="linkShelterMap" href="#" target="_blank" rel="noreferrer">Interactive Tel Aviv Shelter Map</a>
-            </p>
+            <p>Keep your phone charged and notifications enabled. If there’s any urgent update from us, we’ll post it here and on the group chat.</p>
           </div>
         </div>
 
