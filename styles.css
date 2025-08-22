@@ -110,7 +110,7 @@ img, picture, video, canvas { display:block; max-width:100%; }
 }
 
 /* -------------------------
-   Site tabs (Home / Calendar)
+   Site tabs (Home / Calendar / Explore / Contacts)
    ------------------------- */
 .site-tabs {
   position: sticky; top: 0; z-index: 5;
@@ -370,18 +370,23 @@ img, picture, video, canvas { display:block; max-width:100%; }
    CONTACTS TAB (table + emergency list + siren guidance)
    =================================================================== */
 
-/* Name pieces default inline (desktop) */
+/* Name pieces default inline (desktop/tablet) */
 .name-first,
 .name-last { display: inline; }
+/* Insert a real visual space when inline */
+.name-last::before { content: " "; }
 
-/* Contacts table (desktop default) */
+/* Contacts table (stable layout at all sizes) */
 #contactsTable {
   width: 100%;
   border-collapse: collapse;
-  min-width: 520px; /* desktop width guard */
+  table-layout: fixed;             /* <<< key: prevents overflow */
+  min-width: 520px;                /* desktop width guard */
   background: var(--surface);
   color: var(--text);
 }
+#contactsTable col.col-actions { width: 68px; }   /* fixed Actions column */
+
 #contactsTable thead th {
   text-align: left;
   font-weight: 700;
@@ -398,40 +403,46 @@ img, picture, video, canvas { display:block; max-width:100%; }
   border-bottom: 1px solid var(--ring);
   vertical-align: middle;
 }
-#contactsTable tbody tr:hover {
-  background: rgba(191,224,255,.18);
-}
+
+/* Allow wrapping in Name/Notes so icons never push out */
+#contactsTable td[data-label="Name"],
+#contactsTable td[data-label="Notes"] { overflow-wrap:anywhere; word-break: normal; }
+
+/* Links in the table (default) */
 #contactsTable a {
   color: inherit;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
-/* Make the action buttons compact & inline everywhere */
-#contactsTable td .btn {
-  width: auto;
-  padding: 6px 10px;
-  line-height: 1.2;
-}
+/* But NOT the icon-only links in Actions */
+#contactsTable tbody td[data-label="Actions"] a { text-decoration: none; color: inherit; }
 
-/* Actions cell layout */
+/* Actions cell layout (aligned, never wraps) */
 #contactsTable tbody td[data-label="Actions"] {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: nowrap;
+  justify-content: flex-end;
+  white-space: nowrap;
 }
 
-/* Small icon-only buttons used in Actions */
+/* Icon-only buttons: larger hit area; 24px glyphs */
 #contactsTable td .btn.icon {
-  padding: 6px;
+  padding: 10px; /* ~44×44 hit with 24px icon */
   border-radius: 10px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 #contactsTable td .btn.icon svg,
-#contactsTable td .btn.icon img { width: 22px; height: 22px; display:block; }
+#contactsTable td .btn.icon img { width: 24px; height: 24px; display:block; }
+
+/* Hover row (desktop) */
+#contactsTable tbody tr:hover {
+  background: rgba(191,224,255,.18);
+}
 
 /* Emergency list block */
 #emergencyList {
@@ -475,6 +486,29 @@ img, picture, video, canvas { display:block; max-width:100%; }
   #emergencyList li { background: #0f172a; }
 }
 
+/* Ensure the card never shows overflow seams */
+#contacts .card { overflow: hidden; }
+
+/* ============================================
+   CONTACTS — Mobile (≤640px): stack names; hide Phone; stable layout
+   ============================================ */
+@media (max-width: 640px) {
+  #contactsTable {
+    min-width: 0;         /* allow shrinking */
+    width: 100%;
+    table-layout: fixed;  /* keep stable on mobile as well */
+  }
+
+  /* Hide the Phone column (2nd col) */
+  #contactsTable th:nth-child(2),
+  #contactsTable td:nth-child(2) { display: none; }
+
+  /* Stack names to avoid tight inline fit */
+  .name-first, .name-last { display:block; }
+  .name-last { margin-top: 2px; }
+  .name-last::before { content: ""; } /* remove inline space when stacked */
+}
+
 /* Utility for screen-reader-only text */
 .visually-hidden {
   position: absolute !important;
@@ -483,19 +517,3 @@ img, picture, video, canvas { display:block; max-width:100%; }
   overflow: hidden; clip: rect(0 0 0 0);
   white-space: nowrap; border: 0;
 }
-
-/* ============================================
-   CONTACTS — Mobile (≤640px): compact, Name+Notes auto-fit, Actions gets leftover
-   ============================================ */
-@media (max-width: 640px) {
-  #contactsTable {
-    min-width: 0;         /* allow shrinking */
-    width: 100%;
-    table-layout: auto;   /* size by content */
-  }
-
-  /* Hide the Phone column (2nd col) */
-  #contactsTable th:nth-child(2),
-  #contactsTable td:nth-child(2) { display: none; }
-
-  /* General tightening */
