@@ -149,6 +149,7 @@ img, picture, video, canvas { display:block; max-width:100%; }
 .welcome-text {
   line-height: 1.6;
   margin: 16px 0 24px;
+  text-align: center;
 }
 .welcome-text a {
   color: var(--blue);
