@@ -66,6 +66,13 @@ function parseCSV(text){
 
 function normalizeRows(rows){
   const grouped = {};
+  const normTime = s => {
+    s = (s || '').trim();
+    if(!s) return '';
+    const m = s.match(/^(\d{1,2}):(\d{2})/);
+    if(!m) return '';
+    return m[1].padStart(2,'0') + ':' + m[2];
+  }; // strip seconds like HH:MM:SS → HH:MM, handle 1-digit hours
   for(const r of rows){
     const obj = {
       'Day':           r['Day'] || '',
@@ -82,8 +89,8 @@ function normalizeRows(rows){
     const key = `${obj['Day']}__${obj['Date']}`;
     if(!grouped[key]) grouped[key] = { day: obj['Day'], date: obj['Date'], items: [] };
     grouped[key].items.push({
-      startTime: (obj['Start Time']||'').padStart(5,'0'),
-      endTime:   (obj['End Time']||'').trim(),
+      startTime: normTime(obj['Start Time']),
+      endTime:   normTime(obj['End Time']),
       title:     obj['Activity Name']||'',
       description: obj['Description']||'',
       location:  obj['Location']||'',
@@ -135,8 +142,8 @@ function activityCard(item, dateISO){
 
   const time = document.createElement('div');
   time.className = 'time';
-  const start = (item.startTime||'').padStart(5,'0');
-  const end = (item.endTime||'').padStart(5,'0');
+  const start = item.startTime ? item.startTime.padStart(5,'0') : '';
+  const end = item.endTime ? item.endTime.padStart(5,'0') : '';
   const range = end && end !== start ? `${start} – ${end}` : (start || '');
   time.textContent = range;
 
@@ -251,7 +258,12 @@ function parseCSVExplore(text){
   if (!lines.length) return [];
   const headers = splitCSVLine(lines[0]).map(h => h.trim());
   const idx = (name) => headers.findIndex(h => h.toLowerCase() === name.toLowerCase());
-  const iName = idx('Name'), iCat = idx('Category'), iSub = idx('Subcategory'), iAddr = idx('Address'), iMap = idx('Map Link');
+  const iName = idx('Name'),
+        iCat  = idx('Category'),
+        iSub  = idx('Subcategory'),
+        iAddr = idx('Address'),
+        iMap  = idx('Map Link'),
+        iImg  = idx('Image URL');
   return lines.slice(1).map(line => {
     const cells = splitCSVLine(line).map(s => s.replace(/^"|"$/g,'').trim());
     return {
@@ -259,7 +271,8 @@ function parseCSVExplore(text){
       category: cells[iCat] || '',
       subcategory: cells[iSub] || '',
       address: cells[iAddr] || '',
-      map: cells[iMap] || ''
+      map: cells[iMap] || '',
+      imageUrl: cells[iImg] || ''
     };
   });
 }
@@ -349,6 +362,16 @@ function exploreCard(place){
 
   row.appendChild(body);
   card.appendChild(row);
+  if (place.imageUrl){
+    const img = document.createElement('img');
+    img.src = place.imageUrl;
+    img.alt = place.name || '';
+    img.style.marginTop = '10px';
+    img.style.width = '100%';
+    img.style.borderRadius = '12px';
+    img.loading = 'lazy';
+    card.appendChild(img);
+  }
   return card;
 }
 
