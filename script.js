@@ -542,7 +542,7 @@ function renderContactsTable(){
         wa.rel = 'noreferrer';
         wa.setAttribute('aria-label', `WhatsApp ${c.name}`);
         const img = document.createElement('img');
-        img.src = 'assets/whatsapp.svg'; // relative path to avoid subpath 404s
+        img.src = new URL('/assets/whatsapp.svg', location.origin).toString(); // resolve absolute path
         img.alt = '';
         img.width = 24; img.height = 24; img.decoding = 'async'; img.loading = 'lazy';
         img.onerror = () => { wa.textContent = 'WA'; };
