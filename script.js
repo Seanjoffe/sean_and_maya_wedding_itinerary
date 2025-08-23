@@ -5,9 +5,9 @@ const COUPLE = {
   weddingDateISO: '2025-08-31',
   venueMap: 'https://maps.app.goo.gl/njqM2sQ83jtwhUE38'
 };
-const CSV_LOCAL_PATH    = '/wedding_week_itinerary.csv'; // itinerary data
-const CSV_EXPLORE_PATH  = '/wedding_week_explore.csv';   // explore data
-const CSV_CONTACTS_PATH = '/wedding_week_contacts.csv';  // contacts & emergency data
+const CSV_LOCAL_PATH    = 'wedding_week_itinerary.csv'; // itinerary data
+const CSV_EXPLORE_PATH  = 'wedding_week_explore.csv';   // explore data
+const CSV_CONTACTS_PATH = 'wedding_week_contacts.csv';  // contacts & emergency data
 
 // ================= UTILITIES =================
 function fmtDate(iso){ try { return new Date(iso).toLocaleDateString(); } catch { return iso; } }
@@ -554,7 +554,7 @@ function renderContactsTable(){
         wa.target = '_blank';
         wa.rel = 'noreferrer';
         wa.setAttribute('aria-label', `WhatsApp ${c.name}`);
-        wa.innerHTML = '<img src="/assets/whatsapp-logo.svg" alt="" aria-hidden="true"/><span class="label">WhatsApp</span>';
+        wa.innerHTML = '<img src="assets/whatsapp-logo.svg" alt="" aria-hidden="true"/><span class="label">WhatsApp</span>';
         actionsWrap.appendChild(wa);
       }
     }
@@ -710,10 +710,10 @@ async function load(){
     }
 
     function navigate(view) {
-      let path = '/home';
-      if (view === 'calendar') path = '/calendar';
-      else if (view === 'explore') path = '/explore';
-      else if (view === 'contacts') path = '/contacts';
+      let path = 'home';
+      if (view === 'calendar') path = 'calendar';
+      else if (view === 'explore') path = 'explore';
+      else if (view === 'contacts') path = 'contacts';
       history.pushState({ view }, '', path);
       performRoute();
     }
@@ -756,9 +756,9 @@ async function load(){
       );
     }
     function navigate(view) {
-      let path = '/home';
-      if (view === 'explore') path = '/explore';
-      else if (view === 'contacts') path = '/contacts';
+      let path = 'home';
+      if (view === 'explore') path = 'explore';
+      else if (view === 'contacts') path = 'contacts';
       history.pushState({ view }, '', path);
       performRoute();
     }

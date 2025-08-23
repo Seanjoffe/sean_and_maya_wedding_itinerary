@@ -13,9 +13,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
 
-  <!-- Root-relative assets so they work at /home and /calendar -->
-  <link rel="stylesheet" href="/styles.css?v=17" />
-  <script src="/script.js" defer></script>
+  <!-- Relative assets so the site works from any path -->
+  <link rel="stylesheet" href="./styles.css?v=17" />
+  <script src="./script.js" defer></script>
 </head>
 <body>
   <!-- ===== Banner with centered countdown (pastel bloom background) ===== -->
@@ -29,10 +29,10 @@
 
   <!-- ===== Site tabs (clean paths; JS intercepts clicks) ===== -->
   <nav class="site-tabs" role="tablist" aria-label="Site sections">
-    <a href="/home" data-view="home" class="site-tab" aria-selected="true">Home</a>
-    <a href="/calendar" data-view="calendar" class="site-tab" aria-selected="false">Calendar</a>
-    <a href="/explore" data-view="explore" class="site-tab" aria-selected="false">Explore</a>
-    <a href="/contacts" data-view="contacts" class="site-tab" aria-selected="false">Contacts</a>
+    <a href="home" data-view="home" class="site-tab" aria-selected="true">Home</a>
+    <a href="calendar" data-view="calendar" class="site-tab" aria-selected="false">Calendar</a>
+    <a href="explore" data-view="explore" class="site-tab" aria-selected="false">Explore</a>
+    <a href="contacts" data-view="contacts" class="site-tab" aria-selected="false">Contacts</a>
   </nav>
 
   <!-- ===== HOME VIEW ===== -->
@@ -51,7 +51,7 @@
       <!-- Couple photo -->
       <figure class="hero-photo">
         <img
-          src="/assets/landing_page_staring_at_each_other.jpeg"
+          src="assets/landing_page_staring_at_each_other.jpeg"
           alt="Sean and Maya"
           width="1600" height="1067"
           fetchpriority="high"
