@@ -424,8 +424,8 @@ img, picture, video, canvas { display:block; max-width:100%; }
 }
 #contactsTable .btn.icon img,
 #contactsTable .btn.icon svg {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
 }
 
 /* Actions cell layout */
@@ -517,8 +517,8 @@ img, picture, video, canvas { display:block; max-width:100%; }
   /* Actions: compact icons only */
   #contactsTable tbody td[data-label="Actions"] .actions { gap: 8px; }
   #contactsTable .btn.icon {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     padding: 0;
   }
   #contactsTable .btn.icon .label { display: none; }
