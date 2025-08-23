@@ -423,7 +423,7 @@ img, picture, video, canvas { display:block; max-width:100%; }
 }
 
 /* Actions cell layout */
-#contactsTable tbody td[data-label="Actions"] {
+#contactsTable tbody td[data-label="Actions"] .actions {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -507,7 +507,7 @@ img, picture, video, canvas { display:block; max-width:100%; }
   }
 
   /* Actions: compact icons only */
-  #contactsTable tbody td[data-label="Actions"] { gap: 8px; }
+  #contactsTable tbody td[data-label="Actions"] .actions { gap: 8px; }
   #contactsTable .btn.icon {
     width: 32px;
     height: 32px;

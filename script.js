@@ -529,10 +529,10 @@ function renderContactsTable(){
     // Actions
     const tdActions = document.createElement('td');
     tdActions.style.padding = '10px 12px';
-    tdActions.style.display = 'flex';
-    tdActions.style.gap = '8px';
-    tdActions.style.flexWrap = 'nowrap'; // keep on one line
     tdActions.dataset.label = 'Actions';
+
+    const actionsWrap = document.createElement('div');
+    actionsWrap.className = 'actions';
 
     if (c.phone) {
       const call = document.createElement('a');
@@ -541,7 +541,7 @@ function renderContactsTable(){
       call.rel = 'noreferrer';
       call.setAttribute('aria-label', `Call ${c.name}`);
       call.innerHTML = '<svg aria-hidden="true" viewBox="0 0 24 24"><path fill="currentColor" d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.02-.24 11.72 11.72 0 003.57.57 1 1 0 011 1v3.5a1 1 0 01-1 1C10.07 21 3 13.93 3 5a1 1 0 011-1h3.5a1 1 0 011 1c0 1.24.2 2.45.57 3.57a1 1 0 01-.25 1.02l-2.2 2.2z"/></svg><span class="label">Call</span>';
-      tdActions.appendChild(call);
+      actionsWrap.appendChild(call);
 
       const waUrl = waLink(c.phone);
       if (waUrl) {
@@ -552,9 +552,11 @@ function renderContactsTable(){
         wa.rel = 'noreferrer';
         wa.setAttribute('aria-label', `WhatsApp ${c.name}`);
         wa.innerHTML = '<img src="/assets/whatsapp-logo.svg" alt="" aria-hidden="true"/><span class="label">WhatsApp</span>';
-        tdActions.appendChild(wa);
+        actionsWrap.appendChild(wa);
       }
     }
+
+    tdActions.appendChild(actionsWrap);
 
     tr.appendChild(tdName);
     if (!isMobile && tdPhone) tr.appendChild(tdPhone);
