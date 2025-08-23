@@ -410,6 +410,18 @@ img, picture, video, canvas { display:block; max-width:100%; }
   line-height: 1.2;
 }
 
+/* Icon buttons: inline-flex with icon + label */
+#contactsTable .btn.icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+#contactsTable .btn.icon img,
+#contactsTable .btn.icon svg {
+  width: 16px;
+  height: 16px;
+}
+
 /* Actions cell layout */
 #contactsTable tbody td[data-label="Actions"] {
   display: flex;
@@ -475,19 +487,36 @@ img, picture, video, canvas { display:block; max-width:100%; }
    Compact & no sideways scroll
    ======================= */
 @media (max-width: 640px) {
-  /* Let the table shrink on small screens */
-  #contactsTable { min-width: 0; }
-
-  /* Hide the Phone column (2nd col) in both header & body */
-  #contactsTable th:nth-child(2),
-  #contactsTable td:nth-child(2) { display: none; }
+  /* Let the table shrink and wrap on small screens */
+  #contactsTable {
+    min-width: 0;
+    table-layout: fixed;
+  }
+  #contactsTable th,
+  #contactsTable td {
+    word-break: break-word;
+  }
 
   /* Tighter paddings */
   #contactsTable thead th { padding: 10px 8px; }
   #contactsTable tbody td { padding: 8px 8px; }
 
-  /* Actions: even tighter gap to feel compact */
-  #contactsTable tbody td[data-label="Actions"] { gap: 8px; }
+  /* Name: stack first & last */
+  #contactsTable td[data-label="Name"] span {
+    display: block;
+  }
 
-  /* Keep header visible (shows Name, Notes, Actions only) */
+  /* Actions: compact icons only */
+  #contactsTable tbody td[data-label="Actions"] { gap: 8px; }
+  #contactsTable .btn.icon {
+    width: 32px;
+    height: 32px;
+    padding: 6px;
+  }
+  #contactsTable .btn.icon .label { display: none; }
+  #contactsTable .btn.icon img,
+  #contactsTable .btn.icon svg {
+    width: 20px;
+    height: 20px;
+  }
 }
