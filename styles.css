@@ -106,7 +106,7 @@ img, picture, video, canvas { display:block; max-width:100%; }
 .pill {
   display:inline-flex; align-items:center; gap:8px;
   background: rgba(255,255,255,.92); color:#111;
-  padding: 10px 16px; border-radius: 999px; font-size: 16px; font-weight: 600;
+  padding: 12px 18px; border-radius: 999px; font-size: 18px; font-weight: 600;
 }
 
 /* -------------------------
@@ -209,7 +209,7 @@ img, picture, video, canvas { display:block; max-width:100%; }
   .container { padding: 0 24px; }
 
   .banner .inner { padding: 56px 24px; }
-  .pill { font-size: 14px; padding: 8px 12px; }
+  .pill { font-size: 16px; padding: 10px 14px; }
 
   .site-tabs {
     background: rgba(255,255,255,.65);
@@ -274,7 +274,7 @@ img, picture, video, canvas { display:block; max-width:100%; }
    VERY NARROW phones (≤ 360px)
    =================================================================== */
 @media (max-width: 360px) {
-  .pill { font-size: 15px; padding: 9px 14px; }
+  .pill { font-size: 17px; padding: 11px 16px; }
   .site-tab { padding: 7px 10px; }
 }
 
@@ -424,16 +424,18 @@ img, picture, video, canvas { display:block; max-width:100%; }
 }
 #contactsTable .btn.icon img,
 #contactsTable .btn.icon svg {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
 }
 
 /* Actions cell layout */
 #contactsTable tbody td[data-label="Actions"] .actions {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   flex-wrap: nowrap;
+  width: 100%;
 }
 
 /* Emergency list block */
@@ -515,14 +517,14 @@ img, picture, video, canvas { display:block; max-width:100%; }
   /* Actions: compact icons only */
   #contactsTable tbody td[data-label="Actions"] .actions { gap: 8px; }
   #contactsTable .btn.icon {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     padding: 6px;
   }
   #contactsTable .btn.icon .label { display: none; }
   #contactsTable .btn.icon img,
   #contactsTable .btn.icon svg {
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
   }
 }
