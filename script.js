@@ -251,7 +251,12 @@ function parseCSVExplore(text){
   if (!lines.length) return [];
   const headers = splitCSVLine(lines[0]).map(h => h.trim());
   const idx = (name) => headers.findIndex(h => h.toLowerCase() === name.toLowerCase());
-  const iName = idx('Name'), iCat = idx('Category'), iSub = idx('Subcategory'), iAddr = idx('Address'), iMap = idx('Map Link');
+  const iName = idx('Name'),
+        iCat  = idx('Category'),
+        iSub  = idx('Subcategory'),
+        iAddr = idx('Address'),
+        iMap  = idx('Map Link'),
+        iImg  = idx('Image URL');
   return lines.slice(1).map(line => {
     const cells = splitCSVLine(line).map(s => s.replace(/^"|"$/g,'').trim());
     return {
@@ -259,7 +264,8 @@ function parseCSVExplore(text){
       category: cells[iCat] || '',
       subcategory: cells[iSub] || '',
       address: cells[iAddr] || '',
-      map: cells[iMap] || ''
+      map: cells[iMap] || '',
+      imageUrl: cells[iImg] || ''
     };
   });
 }
@@ -349,6 +355,16 @@ function exploreCard(place){
 
   row.appendChild(body);
   card.appendChild(row);
+  if (place.imageUrl){
+    const img = document.createElement('img');
+    img.src = place.imageUrl;
+    img.alt = place.name || '';
+    img.style.marginTop = '10px';
+    img.style.width = '100%';
+    img.style.borderRadius = '12px';
+    img.loading = 'lazy';
+    card.appendChild(img);
+  }
   return card;
 }
 
