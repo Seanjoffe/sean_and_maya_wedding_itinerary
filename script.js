@@ -66,7 +66,13 @@ function parseCSV(text){
 
 function normalizeRows(rows){
   const grouped = {};
-  const normTime = s => (s || '').trim().slice(0,5); // strip seconds like HH:MM:SS → HH:MM
+  const normTime = s => {
+    s = (s || '').trim();
+    if(!s) return '';
+    const m = s.match(/^(\d{1,2}):(\d{2})/);
+    if(!m) return '';
+    return m[1].padStart(2,'0') + ':' + m[2];
+  }; // strip seconds like HH:MM:SS → HH:MM, handle 1-digit hours
   for(const r of rows){
     const obj = {
       'Day':           r['Day'] || '',
