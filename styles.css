@@ -502,6 +502,7 @@ img, picture, video, canvas { display:block; max-width:100%; }
   /* Hide the Phone column (2nd col) */
   #contactsTable th:nth-child(2),
   #contactsTable td:nth-child(2) { display: none; }
+  #contactsTable col.col-phone { display: none; }
 
   /* Stack names to avoid tight inline fit */
   .name-first, .name-last { display:block; }
