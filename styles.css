@@ -168,6 +168,11 @@ img, picture, video, canvas { display:block; max-width:100%; }
   box-shadow: var(--shadow-sm);
 }
 
+/* Ensure tables within cards respect rounded corners */
+.card:has(#contactsTable) {
+  overflow: hidden;
+}
+
 .row { display:flex; flex-direction: column; align-items:flex-start; gap: 8px; }
 .time { min-width: 0; display:flex; align-items:center; gap:8px; color: #334155; font-weight: 600; }
 .title { font-weight: 700; color: var(--card-text); }
@@ -377,6 +382,7 @@ img, picture, video, canvas { display:block; max-width:100%; }
   min-width: 520px; /* desktop width guard */
   background: var(--surface);
   color: var(--text);
+  border-radius: var(--radius);
 }
 #contactsTable thead th {
   text-align: left;
