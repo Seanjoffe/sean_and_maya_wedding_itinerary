@@ -503,7 +503,10 @@ function renderContactsTable(){
     spanLast.className = 'last';
     spanLast.textContent = last;
     tdName.appendChild(spanFirst);
-    if (last) tdName.appendChild(spanLast);
+    if (last) {
+      if (!isMobile) tdName.appendChild(document.createTextNode(' '));
+      tdName.appendChild(spanLast);
+    }
 
     // Phone column (desktop only)
     let tdPhone;
