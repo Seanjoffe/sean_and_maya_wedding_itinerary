@@ -66,6 +66,7 @@ function parseCSV(text){
 
 function normalizeRows(rows){
   const grouped = {};
+  const normTime = s => (s || '').trim().slice(0,5); // strip seconds like HH:MM:SS → HH:MM
   for(const r of rows){
     const obj = {
       'Day':           r['Day'] || '',
@@ -82,8 +83,8 @@ function normalizeRows(rows){
     const key = `${obj['Day']}__${obj['Date']}`;
     if(!grouped[key]) grouped[key] = { day: obj['Day'], date: obj['Date'], items: [] };
     grouped[key].items.push({
-      startTime: (obj['Start Time']||'').padStart(5,'0'),
-      endTime:   (obj['End Time']||'').trim(),
+      startTime: normTime(obj['Start Time']),
+      endTime:   normTime(obj['End Time']),
       title:     obj['Activity Name']||'',
       description: obj['Description']||'',
       location:  obj['Location']||'',
@@ -135,8 +136,8 @@ function activityCard(item, dateISO){
 
   const time = document.createElement('div');
   time.className = 'time';
-  const start = (item.startTime||'').padStart(5,'0');
-  const end = (item.endTime||'').padStart(5,'0');
+  const start = item.startTime ? item.startTime.padStart(5,'0') : '';
+  const end = item.endTime ? item.endTime.padStart(5,'0') : '';
   const range = end && end !== start ? `${start} – ${end}` : (start || '');
   time.textContent = range;
 
