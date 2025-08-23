@@ -467,67 +467,99 @@ const CONTACTS = {
 };
 
 function renderContactsTable(){
-  const tbody = document.querySelector('#contactsTable tbody');
-  if (!tbody) return;
+  const table = document.getElementById('contactsTable');
+  if (!table) return;
+  const tbody = table.querySelector('tbody');
+  const headRow = table.querySelector('thead tr');
+  const isMobile = window.matchMedia('(max-width:640px)').matches;
+
   tbody.innerHTML = '';
+
+  // Ensure header columns match the view
+  if (isMobile && headRow.children.length === 4) {
+    headRow.children[1].remove(); // remove Phone th
+  } else if (!isMobile && headRow.children.length === 3) {
+    const thPhone = document.createElement('th');
+    thPhone.scope = 'col';
+    thPhone.textContent = 'Phone';
+    thPhone.style.textAlign = 'left';
+    thPhone.style.padding = '12px';
+    headRow.insertBefore(thPhone, headRow.children[1]);
+  }
 
   CONTACTS.contacts.forEach(c => {
     const tr = document.createElement('tr');
 
+    // Name cell
     const tdName = document.createElement('td');
     tdName.style.padding = '10px 12px';
-    tdName.textContent = c.name || '';
     tdName.dataset.label = 'Name';
+    const [first, ...rest] = String(c.name || '').split(/\s+/);
+    const last = rest.join(' ');
+    const spanFirst = document.createElement('span');
+    spanFirst.className = 'first';
+    spanFirst.textContent = first;
+    const spanLast = document.createElement('span');
+    spanLast.className = 'last';
+    spanLast.textContent = last;
+    tdName.appendChild(spanFirst);
+    if (last) tdName.appendChild(spanLast);
 
-    const tdPhone = document.createElement('td');
-    tdPhone.style.padding = '10px 12px';
-    tdPhone.dataset.label = 'Phone';
-    if (c.phone) {
-      const a = document.createElement('a');
-      a.href = telLink(c.phone);
-      a.textContent = c.phone;
-      a.rel = 'noreferrer';
-      tdPhone.appendChild(a);
+    // Phone column (desktop only)
+    let tdPhone;
+    if (!isMobile) {
+      tdPhone = document.createElement('td');
+      tdPhone.style.padding = '10px 12px';
+      tdPhone.dataset.label = 'Phone';
+      if (c.phone) {
+        const a = document.createElement('a');
+        a.href = telLink(c.phone);
+        a.textContent = c.phone;
+        a.rel = 'noreferrer';
+        tdPhone.appendChild(a);
+      }
     }
 
+    // Notes
     const tdNotes = document.createElement('td');
     tdNotes.style.padding = '10px 12px';
     tdNotes.textContent = c.notes || '';
     tdNotes.dataset.label = 'Notes';
 
+    // Actions
     const tdActions = document.createElement('td');
     tdActions.style.padding = '10px 12px';
-    tdActions.style.display = 'flex';
-    tdActions.style.gap = '8px';
-    tdActions.style.flexWrap = 'nowrap'; // keep on one line
     tdActions.dataset.label = 'Actions';
+
+    const actionsWrap = document.createElement('div');
+    actionsWrap.className = 'actions';
 
     if (c.phone) {
       const call = document.createElement('a');
-      call.className = 'btn';
+      call.className = 'btn icon';
       call.href = telLink(c.phone);
-      call.textContent = '📞 Call';
       call.rel = 'noreferrer';
-      call.style.padding = '6px 10px';
-      call.style.width = 'auto';        // override global .btn width:100%
-      tdActions.appendChild(call);
+      call.setAttribute('aria-label', `Call ${c.name}`);
+      call.innerHTML = '<svg aria-hidden="true" viewBox="0 0 24 24"><path fill="currentColor" d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.02-.24 11.72 11.72 0 003.57.57 1 1 0 011 1v3.5a1 1 0 01-1 1C10.07 21 3 13.93 3 5a1 1 0 011-1h3.5a1 1 0 011 1c0 1.24.2 2.45.57 3.57a1 1 0 01-.25 1.02l-2.2 2.2z"/></svg><span class="label">Call</span>';
+      actionsWrap.appendChild(call);
 
       const waUrl = waLink(c.phone);
       if (waUrl) {
         const wa = document.createElement('a');
-        wa.className = 'btn';
+        wa.className = 'btn icon';
         wa.href = waUrl;
         wa.target = '_blank';
         wa.rel = 'noreferrer';
-        wa.textContent = '💬 WhatsApp';
-        wa.style.padding = '6px 10px';
-        wa.style.width = 'auto';        // override global .btn width:100%
-        tdActions.appendChild(wa);
+        wa.setAttribute('aria-label', `WhatsApp ${c.name}`);
+        wa.innerHTML = '<img src="/assets/whatsapp-logo.svg" alt="" aria-hidden="true"/><span class="label">WhatsApp</span>';
+        actionsWrap.appendChild(wa);
       }
     }
 
+    tdActions.appendChild(actionsWrap);
+
     tr.appendChild(tdName);
-    tr.appendChild(tdPhone);
+    if (!isMobile && tdPhone) tr.appendChild(tdPhone);
     tr.appendChild(tdNotes);
     tr.appendChild(tdActions);
 
