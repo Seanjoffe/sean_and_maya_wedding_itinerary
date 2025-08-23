@@ -145,6 +145,18 @@ img, picture, video, canvas { display:block; max-width:100%; }
 .hero-sub   { color: var(--subtext); margin: 10px 0 0; font-weight: 500; }
 .venue-link { color: var(--subtext); text-decoration: underline; text-underline-offset: 3px; }
 
+/* Welcome text block */
+.welcome-text {
+  line-height: 1.6;
+  margin: 16px 0 24px;
+  text-align: center;
+}
+.welcome-text a {
+  color: var(--blue);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 /* Couple photo */
 .hero-photo { margin: 16px -16px 32px; }
 .hero-photo img { width: 100%; height: auto; border-radius: 22px; box-shadow: var(--shadow-md); }
